@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { media, pricing } from '../config/site'
 import { Container } from './ui/Container'
 import { Button } from './ui/Button'
@@ -15,6 +16,20 @@ const highlights = [
 ] as const
 
 export function Hero() {
+  const heroVideoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const v = heroVideoRef.current
+    if (!v) return
+    v.muted = true
+    const tryPlay = () => void v.play().catch(() => {})
+    tryPlay()
+    v.addEventListener('loadeddata', tryPlay, { once: true })
+    return () => {
+      v.removeEventListener('loadeddata', tryPlay)
+    }
+  }, [])
+
   return (
     <section
       id="home"
@@ -23,13 +38,16 @@ export function Hero() {
       {/* Mobile: short band + contain so the frame is not over-cropped. Desktop: full-bleed cover like a normal hero. */}
       <div className="absolute inset-x-0 top-0 z-0 max-md:h-[min(72svh,640px)] md:inset-0 md:h-auto">
         <video
+          ref={heroVideoRef}
           className="h-full w-full object-contain object-center md:object-cover"
           src={media.heroVideo}
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          controls={false}
+          disablePictureInPicture
           aria-hidden="true"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-neutral-950" />

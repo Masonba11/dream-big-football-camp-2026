@@ -14,7 +14,6 @@ export function LoadingIntro({ onComplete }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const playAttempted = useRef(false)
   const [progress, setProgress] = useState(0)
-  const [isMuted, setIsMuted] = useState(false)
   const [exiting, setExiting] = useState(false)
   const [typedBroadcast, setTypedBroadcast] = useState('')
   const [broadcastDone, setBroadcastDone] = useState(false)
@@ -31,15 +30,6 @@ export function LoadingIntro({ onComplete }: Props) {
     window.setTimeout(() => completeRef.current(), 720)
   }, [exiting])
 
-  const tryUnmute = useCallback(() => {
-    const v = videoRef.current
-    if (!v) return
-    v.muted = false
-    v.volume = 1
-    setIsMuted(false)
-    void v.play().catch(() => {})
-  }, [])
-
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -52,17 +42,14 @@ export function LoadingIntro({ onComplete }: Props) {
     const v = videoRef.current
     if (!v) return
 
+    const tryPlay = () => void v.play().catch(() => {})
+
     const run = () => {
       if (playAttempted.current) return
       playAttempted.current = true
-      v.defaultMuted = false
-      v.muted = false
-      v.volume = 1
-      void v.play().catch(() => {
-        v.muted = true
-        setIsMuted(true)
-        void v.play().catch(() => {})
-      })
+      v.muted = true
+      tryPlay()
+      v.addEventListener('loadeddata', tryPlay, { once: true })
     }
 
     if (v.readyState >= 2) run()
@@ -70,6 +57,7 @@ export function LoadingIntro({ onComplete }: Props) {
 
     return () => {
       v.removeEventListener('canplay', run)
+      v.removeEventListener('loadeddata', tryPlay)
     }
   }, [])
 
@@ -140,15 +128,6 @@ export function LoadingIntro({ onComplete }: Props) {
             </div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            {isMuted ? (
-              <button
-                type="button"
-                onClick={tryUnmute}
-                className="rounded border border-amber-500/50 bg-amber-950/40 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-100 backdrop-blur-sm transition hover:border-amber-300/70 hover:bg-amber-900/50 sm:text-xs"
-              >
-                Unmute
-              </button>
-            ) : null}
             <button
               type="button"
               onClick={finish}
@@ -174,12 +153,13 @@ export function LoadingIntro({ onComplete }: Props) {
               className="h-full w-full object-cover"
               src={VIDEO_SRC}
               playsInline
-              muted={isMuted}
+              muted
               autoPlay
               preload="auto"
+              controls={false}
+              disablePictureInPicture
               onEnded={finish}
               onError={finish}
-              onVolumeChange={(e) => setIsMuted(e.currentTarget.muted)}
               onTimeUpdate={(e) => {
                 const el = e.currentTarget
                 if (!el.duration || Number.isNaN(el.duration)) return
