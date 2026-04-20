@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAutoplayUnmutedVideo } from '../hooks/useAutoplayUnmutedVideo'
 
 const VIDEO_SRC = '/BRAYLENRUSSELLKIDSCAMP.MOV'
 
@@ -12,7 +13,7 @@ type Props = {
 
 export function LoadingIntro({ onComplete }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const playAttempted = useRef(false)
+  useAutoplayUnmutedVideo(videoRef)
   const [progress, setProgress] = useState(0)
   const [exiting, setExiting] = useState(false)
   const [typedBroadcast, setTypedBroadcast] = useState('')
@@ -35,29 +36,6 @@ export function LoadingIntro({ onComplete }: Props) {
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
-    }
-  }, [])
-
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-
-    const tryPlay = () => void v.play().catch(() => {})
-
-    const run = () => {
-      if (playAttempted.current) return
-      playAttempted.current = true
-      v.muted = true
-      tryPlay()
-      v.addEventListener('loadeddata', tryPlay, { once: true })
-    }
-
-    if (v.readyState >= 2) run()
-    else v.addEventListener('canplay', run, { once: true })
-
-    return () => {
-      v.removeEventListener('canplay', run)
-      v.removeEventListener('loadeddata', tryPlay)
     }
   }, [])
 
@@ -150,10 +128,10 @@ export function LoadingIntro({ onComplete }: Props) {
             <div className="pointer-events-none absolute inset-0 z-10 bg-[repeating-linear-gradient(180deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_4px)] mix-blend-overlay" />
             <video
               ref={videoRef}
-              className="h-full w-full object-cover"
+              className="video-autoplay h-full w-full object-cover"
               src={VIDEO_SRC}
               playsInline
-              muted
+              muted={false}
               autoPlay
               preload="auto"
               controls={false}

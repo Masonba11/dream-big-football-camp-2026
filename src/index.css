@@ -40,6 +40,27 @@
   text-wrap: balance;
 }
 
+/* Decorative autoplay clips: hide WebKit’s default inline play overlay */
+video.video-autoplay::-webkit-media-controls {
+  display: none !important;
+}
+video.video-autoplay::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+video.video-autoplay::-webkit-media-controls-panel {
+  display: none !important;
+}
+video.video-autoplay::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+}
+video.video-autoplay::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* Scroll reveal: add .reveal-ready .reveal-on when in view via JS */
 .reveal-on {
   opacity: 0;

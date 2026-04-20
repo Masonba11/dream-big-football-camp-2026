@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { media, pricing } from '../config/site'
+import { useAutoplayUnmutedVideo } from '../hooks/useAutoplayUnmutedVideo'
 import { Container } from './ui/Container'
 import { Button } from './ui/Button'
 import { Countdown } from './Countdown'
@@ -17,18 +18,7 @@ const highlights = [
 
 export function Hero() {
   const heroVideoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    const v = heroVideoRef.current
-    if (!v) return
-    v.muted = true
-    const tryPlay = () => void v.play().catch(() => {})
-    tryPlay()
-    v.addEventListener('loadeddata', tryPlay, { once: true })
-    return () => {
-      v.removeEventListener('loadeddata', tryPlay)
-    }
-  }, [])
+  useAutoplayUnmutedVideo(heroVideoRef)
 
   return (
     <section
@@ -39,10 +29,10 @@ export function Hero() {
       <div className="absolute inset-x-0 top-0 z-0 max-md:h-[min(72svh,640px)] md:inset-0 md:h-auto">
         <video
           ref={heroVideoRef}
-          className="h-full w-full object-contain object-center md:object-cover"
+          className="video-autoplay h-full w-full object-contain object-center md:object-cover"
           src={media.heroVideo}
           autoPlay
-          muted
+          muted={false}
           loop
           playsInline
           preload="auto"
