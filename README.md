@@ -2,6 +2,9 @@
 
 Marketing site for **Dream Big Football Camp 2026**, hosted by Braylen Russell — Vite, React, TypeScript, Tailwind CSS.
 
+- **GitHub:** https://github.com/Masonba11/dream-big-football-camp-2026  
+- **Production (Vercel):** https://dream-big-football-camp-2026.vercel.app  
+
 ## Develop
 
 ```bash
@@ -18,24 +21,12 @@ npm run preview
 
 ## Deploy on Vercel
 
-1. Push this repo to GitHub (see below).
-2. In [Vercel](https://vercel.com) → **Add New Project** → import the GitHub repository.
-3. Vercel should detect **Vite**; defaults are **Build Command** `npm run build` and **Output Directory** `dist` (also set in `vercel.json`).
-4. Deploy. Static assets (e.g. hero video) are served from `public/`.
+This project is linked to Vercel (`vercel.json` sets `npm run build` → `dist`). Pushes to `main` on GitHub can trigger **automatic production deploys** if that Git integration is enabled in the Vercel project settings.
 
-## GitHub (first time)
+To deploy manually from your machine (with [Vercel CLI](https://vercel.com/docs/cli) logged in):
 
 ```bash
-git init
-git add -A
-git commit -m "Initial commit: Dream Big Football Camp 2026 site"
-gh repo create YOUR-REPO-NAME --public --source=. --remote=origin --push
+npx vercel deploy --prod
 ```
 
-Replace `YOUR-REPO-NAME` with your chosen repository name, or create an empty repo on GitHub and:
-
-```bash
-git remote add origin https://github.com/YOUR_USER/YOUR_REPO.git
-git branch -M main
-git push -u origin main
-```
+New Vercel project from GitHub: [Vercel → Add New Project](https://vercel.com/new) → import `Masonba11/dream-big-football-camp-2026` → Framework Preset **Vite**, root `.`, build `npm run build`, output `dist`.
