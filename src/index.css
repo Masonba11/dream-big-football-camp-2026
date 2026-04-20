@@ -1,0 +1,143 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Bebas Neue', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --color-brand-red: #c8102e;
+  --color-brand-red-dark: #9a0c24;
+  --color-surface: #0a0a0a;
+  --color-surface-elevated: #141414;
+  --shadow-glow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 20px 50px -20px rgb(0 0 0 / 0.65);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .reveal-on {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  body {
+    @apply bg-neutral-950 text-neutral-100 antialiased font-sans;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-red-500;
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+/* Scroll reveal: add .reveal-ready .reveal-on when in view via JS */
+.reveal-on {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
+
+.reveal-on.reveal-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Loading intro — HUD motion */
+@keyframes intro-scan-beam {
+  0% {
+    transform: translateY(-130%);
+    opacity: 0.25;
+  }
+  45% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateY(130%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(130%);
+    opacity: 0.2;
+  }
+}
+
+.intro-scan-beam {
+  animation: intro-scan-beam 3.4s ease-in-out infinite;
+}
+
+@keyframes intro-corner-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.25));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.55));
+  }
+}
+
+.intro-corner {
+  animation: intro-corner-pulse 2.5s ease-in-out infinite;
+}
+
+.intro-corner-tr {
+  animation-delay: 0.12s;
+}
+.intro-corner-bl {
+  animation-delay: 0.24s;
+}
+.intro-corner-br {
+  animation-delay: 0.36s;
+}
+
+@keyframes intro-glitch {
+  0%,
+  90%,
+  100% {
+    text-shadow:
+      0 0 18px rgba(34, 211, 238, 0.35),
+      0 0 0 transparent;
+    transform: translate(0, 0);
+  }
+  91% {
+    text-shadow:
+      -2px 0 0 rgba(248, 113, 113, 0.65),
+      2px 0 0 rgba(34, 211, 238, 0.55);
+    transform: translate(-1px, 0.5px);
+  }
+  92% {
+    text-shadow:
+      3px 0 0 rgba(248, 113, 113, 0.45),
+      -3px 0 0 rgba(34, 211, 238, 0.55);
+    transform: translate(1px, -0.5px);
+  }
+  93% {
+    text-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+    transform: translate(0, 0);
+  }
+}
+
+.intro-glitch {
+  animation: intro-glitch 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-scan-beam,
+  .intro-corner,
+  .intro-glitch {
+    animation: none !important;
+  }
+}
