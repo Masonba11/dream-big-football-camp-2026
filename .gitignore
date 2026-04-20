@@ -26,3 +26,4 @@ dist-ssr
 # Duplicate video sources (deployed copies live in /public)
 /*.mov
 /*.MOV
+.vercel

@@ -40,7 +40,11 @@ export function Header() {
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
-        scrolled ? 'border-white/10 bg-neutral-950/90 backdrop-blur-md' : 'border-transparent bg-neutral-950/70 backdrop-blur-sm'
+        open
+          ? 'border-white/10 bg-neutral-950 backdrop-blur-md max-lg:shadow-[0_8px_30px_rgba(0,0,0,0.65)] lg:border-transparent lg:bg-neutral-950/70 lg:shadow-none lg:backdrop-blur-sm'
+          : scrolled
+            ? 'border-white/10 bg-neutral-950/90 backdrop-blur-md'
+            : 'border-transparent bg-neutral-950/70 backdrop-blur-sm'
       }`}
     >
       <Container className="flex h-16 items-center justify-between gap-4">
@@ -97,17 +101,17 @@ export function Header() {
 
       <div
         id="mobile-menu"
-        className={`fixed inset-0 top-16 z-40 bg-neutral-950/98 backdrop-blur-lg transition lg:hidden ${
+        className={`fixed inset-0 top-16 z-40 border-t border-white/10 bg-neutral-950 backdrop-blur-md transition lg:hidden ${
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
-        <nav className="flex flex-col gap-1 px-4 py-6" aria-label="Mobile primary">
+        <nav className="flex flex-col gap-2 px-4 py-6" aria-label="Mobile primary">
           {links.map((l) => (
             <button
               key={l.id}
               type="button"
               onClick={() => go(l.id)}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white"
+              className="rounded-xl border border-white/20 bg-neutral-900 px-4 py-3.5 text-left text-sm font-semibold text-white shadow-sm transition hover:border-white/30 hover:bg-neutral-800 active:bg-neutral-800"
             >
               {l.label}
             </button>
