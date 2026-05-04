@@ -3,7 +3,7 @@ import { media } from '../config/site'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
 
-export function GallerySection() {
+export function GallerySection({ embedded = false }: { embedded?: boolean }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const active = activeIndex === null ? null : media.gallery[activeIndex]
 
@@ -21,9 +21,9 @@ export function GallerySection() {
     }
   }, [activeIndex])
 
-  return (
-    <SectionShell id="gallery">
-      <Container>
+  const grid = (
+    <>
+      {!embedded ? (
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">Camp recap</p>
           <h2 className="mt-3 font-display text-4xl tracking-wide text-white sm:text-5xl">Photo gallery</h2>
@@ -33,37 +33,37 @@ export function GallerySection() {
             <code className="rounded bg-white/10 px-1 py-0.5 text-xs text-white">src/config/site.ts</code>.
           </p>
         </div>
+      ) : null}
 
-        <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3">
-          {media.gallery.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              className="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 text-left shadow-[var(--shadow-glow)] transition duration-300 hover:-translate-y-1 hover:border-red-500/40"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={item.src}
-                  alt={item.alt}
-                  className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
-                  width={1200}
-                  height={900}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 transition group-hover:opacity-95" />
-                <span className="absolute bottom-3 left-3 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
-                  View
-                </span>
-              </div>
-              <div className="p-4">
-                <p className="text-sm font-semibold text-white">{item.caption}</p>
-                <p className="mt-1 text-xs text-neutral-500">{item.alt}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </Container>
+      <div className={`columns-1 gap-4 sm:columns-2 lg:columns-3 ${embedded ? '' : 'mt-12'}`}>
+        {media.gallery.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setActiveIndex(index)}
+            className="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 text-left shadow-[var(--shadow-glow)] transition duration-300 hover:-translate-y-1 hover:border-red-500/40"
+          >
+            <div className="relative overflow-hidden">
+              <img
+                src={item.src}
+                alt={item.alt}
+                className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                width={1200}
+                height={900}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 transition group-hover:opacity-95" />
+              <span className="absolute bottom-3 left-3 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-sm">
+                View
+              </span>
+            </div>
+            <div className="p-4">
+              <p className="text-sm font-semibold text-white">{item.caption}</p>
+              <p className="mt-1 text-xs text-neutral-500">{item.alt}</p>
+            </div>
+          </button>
+        ))}
+      </div>
 
       {active ? (
         <div
@@ -92,6 +92,16 @@ export function GallerySection() {
           </div>
         </div>
       ) : null}
+    </>
+  )
+
+  if (embedded) {
+    return <div className="border-t border-white/10 pt-8">{grid}</div>
+  }
+
+  return (
+    <SectionShell id="gallery">
+      <Container>{grid}</Container>
     </SectionShell>
   )
 }

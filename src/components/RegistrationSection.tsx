@@ -1,12 +1,51 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { pricing, registrationCloses } from '../config/site'
-import { registrationFormConfig } from '../config/formEndpoints'
+import { getRegistrationWeb3AccessKey } from '../config/web3formsAccess'
+import { WAIVER_VERSION } from '../config/waiver'
+import { submitWeb3Form } from '../lib/web3forms'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
 import { Button } from './ui/Button'
 import { SelectField, TextAreaField, TextField } from './ui/Field'
 
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/cNi3cv3ir7T18wybtl4c800'
+
+const STORAGE_KEY = 'campRegistration'
+
+type CamperAgeGroup = '' | 'under18' | '18plus'
+
+type CampRegistrationForm = {
+  parentName: string
+  camperName: string
+  email: string
+  phone: string
+  grade: string
+  shirtSize: string
+  emergencyContact: string
+  emergencyPhone: string
+  notes: string
+  waiverAccepted: boolean
+  camperAgeGroup: CamperAgeGroup
+  guardianSigningName: string
+}
+
 type Errors = Partial<Record<string, string>>
+
+const initialFields: CampRegistrationForm = {
+  parentName: '',
+  camperName: '',
+  email: '',
+  phone: '',
+  grade: '',
+  shirtSize: '',
+  emergencyContact: '',
+  emergencyPhone: '',
+  notes: '',
+  waiverAccepted: false,
+  camperAgeGroup: '',
+  guardianSigningName: '',
+}
 
 const closes = registrationCloses.toLocaleDateString(undefined, {
   month: 'long',
@@ -14,82 +53,137 @@ const closes = registrationCloses.toLocaleDateString(undefined, {
   year: 'numeric',
 })
 
-function validate(data: FormData): Errors {
+function validateFields(f: CampRegistrationForm): Errors {
   const errors: Errors = {}
-  const req = (k: string, label: string) => {
-    const v = String(data.get(k) ?? '').trim()
-    if (!v) errors[k] = `${label} is required.`
+  const req = (key: keyof CampRegistrationForm, label: string) => {
+    if (key === 'waiverAccepted') return
+    const v = f[key]
+    if (typeof v !== 'string') return
+    if (!v.trim()) errors[key as string] = `${label} is required.`
   }
 
-  req('parentName', 'Parent / guardian name')
+  req('parentName', 'Parent name')
   req('camperName', 'Camper name')
-  req('grade', 'Grade')
-  req('shirt', 'Shirt size')
   req('email', 'Email')
   req('phone', 'Phone number')
-  req('emergency', 'Emergency contact')
+  req('grade', 'Grade')
+  req('shirtSize', 'Shirt size')
+  req('emergencyContact', 'Emergency contact')
+  req('emergencyPhone', 'Emergency phone')
 
-  const email = String(data.get('email') ?? '').trim()
+  if (!f.camperAgeGroup) {
+    errors.camperAgeGroup = 'Select whether the camper is under 18 or 18+ as of camp day.'
+  }
+
+  if (f.camperAgeGroup === 'under18' && !f.guardianSigningName.trim()) {
+    errors.guardianSigningName = 'Type the parent or legal guardian’s full legal name to agree on behalf of a minor.'
+  }
+
+  if (!f.waiverAccepted) {
+    errors.waiverAccepted = 'You must read and agree to the Liability Waiver before continuing.'
+  }
+
+  const email = f.email.trim()
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = 'Enter a valid email address.'
   }
 
-  const phone = String(data.get('phone') ?? '').replace(/\D/g, '')
-  if (phone && phone.length < 10) {
+  const phoneDigits = f.phone.replace(/\D/g, '')
+  if (f.phone.trim() && phoneDigits.length < 10) {
     errors.phone = 'Enter a 10-digit phone number (include area code).'
   }
 
-  const emergencyPhone = String(data.get('emergencyPhone') ?? '').replace(/\D/g, '')
-  if (data.get('emergencyPhone') && emergencyPhone.length < 10) {
-    errors.emergencyPhone = 'Enter a valid emergency phone number.'
+  const emergencyDigits = f.emergencyPhone.replace(/\D/g, '')
+  if (f.emergencyPhone.trim() && emergencyDigits.length < 10) {
+    errors.emergencyPhone = 'Enter a valid 10-digit emergency phone (include area code).'
   }
 
   return errors
 }
 
+function isFormComplete(f: CampRegistrationForm): boolean {
+  return Object.keys(validateFields(f)).length === 0
+}
+
 export function RegistrationSection() {
+  const [fields, setFields] = useState<CampRegistrationForm>(initialFields)
   const [errors, setErrors] = useState<Errors>({})
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
-  const [message, setMessage] = useState('')
+  const [submitError, setSubmitError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const canSubmit = useMemo(() => isFormComplete(fields), [fields])
+
+  function setField<K extends keyof CampRegistrationForm>(key: K, value: CampRegistrationForm[K]) {
+    setSubmitError('')
+    setFields((prev) => ({ ...prev, [key]: value }))
+    setErrors((prev) => {
+      if (!prev[key as string]) return prev
+      const next = { ...prev }
+      delete next[key as string]
+      return next
+    })
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = e.currentTarget
-    const data = new FormData(form)
-    const next = validate(data)
+    const next = validateFields(fields)
     setErrors(next)
-    if (Object.keys(next).length) {
-      setStatus('idle')
-      setMessage('')
+    if (Object.keys(next).length) return
+
+    const accessKey = getRegistrationWeb3AccessKey()
+    if (!accessKey) {
+      setSubmitError(
+        'Registration form is not configured. Add VITE_WEB3FORMS_REGISTRATION_ACCESS_KEY to .env.local (see .env.example).',
+      )
       return
     }
 
-    setStatus('submitting')
-    setMessage('')
+    const agreedAt = new Date().toISOString()
+
+    const formData = {
+      parentName: fields.parentName.trim(),
+      camperName: fields.camperName.trim(),
+      email: fields.email.trim(),
+      phone: fields.phone.trim(),
+      grade: fields.grade.trim(),
+      shirtSize: fields.shirtSize.trim(),
+      emergencyContact: fields.emergencyContact.trim(),
+      emergencyPhone: fields.emergencyPhone.trim(),
+      notes: fields.notes.trim(),
+      camperAgeGroup: fields.camperAgeGroup,
+      guardianSigningName: fields.camperAgeGroup === 'under18' ? fields.guardianSigningName.trim() : '',
+      waiverAccepted: true,
+      waiverVersion: WAIVER_VERSION,
+      waiverAgreedAt: agreedAt,
+      parentGuardianNameOnFile: fields.parentName.trim(),
+    }
+
+    if (import.meta.env.DEV) {
+      console.info('[Dream Big] Registration before payment:', formData)
+    }
+
+    setSubmitError('')
+    setIsSubmitting(true)
+    try {
+      await submitWeb3Form(accessKey, {
+        subject: 'Dream Big Football Camp 2026 — Player registration (pre-payment)',
+        from_name: formData.parentName,
+        form_type: 'player_registration',
+        ...formData,
+      })
+    } catch (err) {
+      setIsSubmitting(false)
+      setSubmitError(err instanceof Error ? err.message : 'Could not send registration. Try again or contact us.')
+      return
+    }
 
     try {
-      if (registrationFormConfig.backend === 'formspree' && registrationFormConfig.actionUrl) {
-        await fetch(registrationFormConfig.actionUrl, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: data,
-        })
-      } else if (registrationFormConfig.backend === 'custom' && registrationFormConfig.actionUrl) {
-        await fetch(registrationFormConfig.actionUrl, {
-          method: registrationFormConfig.method,
-          body: data,
-        })
-      } else {
-        await new Promise((r) => setTimeout(r, 900))
-        console.info('[Dream Big] Registration payload (placeholder):', Object.fromEntries(data.entries()))
-      }
-      setStatus('success')
-      setMessage('Thanks — your details are captured. You will connect checkout next; watch your email.')
-      form.reset()
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
     } catch {
-      setStatus('error')
-      setMessage('Something went wrong. Please try again or contact us by email or text.')
+      // Still redirect if storage fails
     }
+
+    window.location.href = STRIPE_PAYMENT_LINK
   }
 
   return (
@@ -102,8 +196,8 @@ export function RegistrationSection() {
               Register for Dream Big Football Camp 2026
             </h2>
             <p className="mt-4 text-neutral-400">
-              Online registration only. Payment is required to secure a spot. Card payments are accepted during
-              checkout when you connect your processor.
+              Fill out the form below, agree to the liability waiver, then continue to Stripe. Your answers are sent
+              securely first; a copy of registration and waiver details is also saved in this browser before you pay.
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -115,136 +209,217 @@ export function RegistrationSection() {
             <ul className="mt-8 space-y-2 text-sm text-neutral-300">
               <li>• Online registration closes July 13.</li>
               <li>• Registration is not complete until payment is received.</li>
-              <li>• Day-of pricing is higher and does not guarantee a shirt.</li>
+              <li>• A parent or legal guardian must agree to the waiver for campers under 18.</li>
             </ul>
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 text-xs leading-relaxed text-neutral-400">
-              <p className="font-semibold text-neutral-200">Developer note — payments & forms</p>
+              <p className="font-semibold text-neutral-200">How it works</p>
               <p className="mt-2">
-                Wire this form to <strong>Stripe</strong>, <strong>Square</strong>, <strong>Formspree</strong>,{' '}
-                <strong>Google Forms</strong>, or your own API by updating{' '}
-                <code className="rounded bg-white/10 px-1 py-0.5 text-[11px] text-white">
-                  src/config/formEndpoints.ts
-                </code>{' '}
-                and posting <code className="rounded bg-white/10 px-1 py-0.5 text-[11px]">FormData</code> from the
-                submit handler in <code className="rounded bg-white/10 px-1 py-0.5 text-[11px]">RegistrationSection</code>.
+                Complete every required field and the waiver, then click <strong>Continue to Payment</strong>. You
+                will be sent to a secure Stripe page to pay by card.
+              </p>
+              <p className="mt-3">
+                <Link to="/liability-waiver" className="font-semibold text-red-300 underline-offset-2 hover:underline">
+                  Read the full Liability Waiver
+                </Link>{' '}
+                before you check the agreement box.
               </p>
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-neutral-900/60 p-6 shadow-[var(--shadow-glow)] backdrop-blur-md sm:p-8">
-            {status === 'success' ? (
-              <div
-                className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-5 text-sm text-emerald-100"
-                role="status"
-              >
-                <p className="font-semibold text-emerald-50">You’re on the list (demo).</p>
-                <p className="mt-2 text-emerald-100/90">{message}</p>
-                <Button type="button" variant="secondary" className="mt-4 w-full" onClick={() => setStatus('idle')}>
-                  Register another camper
-                </Button>
+            <form className="space-y-4" onSubmit={onSubmit} noValidate>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  id="parentName"
+                  name="parentName"
+                  label="Parent Name"
+                  autoComplete="name"
+                  value={fields.parentName}
+                  onChange={(e) => setField('parentName', e.target.value)}
+                  error={errors.parentName}
+                />
+                <TextField
+                  id="camperName"
+                  name="camperName"
+                  label="Camper Name"
+                  autoComplete="off"
+                  value={fields.camperName}
+                  onChange={(e) => setField('camperName', e.target.value)}
+                  error={errors.camperName}
+                />
               </div>
-            ) : (
-              <form className="space-y-4" onSubmit={onSubmit} noValidate>
-                {status === 'error' ? (
-                  <p className="rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-sm text-red-100" role="alert">
-                    {message}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  id="email"
+                  name="email"
+                  type="email"
+                  label="Email"
+                  autoComplete="email"
+                  value={fields.email}
+                  onChange={(e) => setField('email', e.target.value)}
+                  error={errors.email}
+                />
+                <TextField
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  label="Phone Number"
+                  autoComplete="tel"
+                  placeholder="(555) 555-5555"
+                  value={fields.phone}
+                  onChange={(e) => setField('phone', e.target.value)}
+                  error={errors.phone}
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SelectField
+                  id="grade"
+                  name="grade"
+                  label="Grade"
+                  value={fields.grade}
+                  onChange={(e) => setField('grade', e.target.value)}
+                  error={errors.grade}
+                >
+                  <option value="" disabled>
+                    Select grade
+                  </option>
+                  <option value="1st–3rd">1st–3rd</option>
+                  <option value="4th–7th">4th–7th</option>
+                  <option value="8th–10th">8th–10th</option>
+                </SelectField>
+                <SelectField
+                  id="shirtSize"
+                  name="shirtSize"
+                  label="Shirt Size"
+                  value={fields.shirtSize}
+                  onChange={(e) => setField('shirtSize', e.target.value)}
+                  error={errors.shirtSize}
+                >
+                  <option value="" disabled>
+                    Select size
+                  </option>
+                  {['Youth S', 'Youth M', 'Youth L', 'Adult S', 'Adult M', 'Adult L', 'Adult XL'].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </SelectField>
+              </div>
+
+              <SelectField
+                id="camperAgeGroup"
+                name="camperAgeGroup"
+                label="Camper age (as of camp day, July 18, 2026)"
+                value={fields.camperAgeGroup}
+                onChange={(e) => {
+                  const v = e.target.value as CamperAgeGroup
+                  setField('camperAgeGroup', v)
+                  if (v !== 'under18') {
+                    setField('guardianSigningName', '')
+                    setErrors((prev) => {
+                      const next = { ...prev }
+                      delete next.guardianSigningName
+                      return next
+                    })
+                  }
+                }}
+                error={errors.camperAgeGroup}
+              >
+                <option value="" disabled>
+                  Select age group
+                </option>
+                <option value="under18">Under 18</option>
+                <option value="18plus">18 or older</option>
+              </SelectField>
+
+              {fields.camperAgeGroup === 'under18' ? (
+                <TextField
+                  id="guardianSigningName"
+                  name="guardianSigningName"
+                  label="Parent / legal guardian — full legal name (electronic signature)"
+                  hint="Type your name exactly as it appears on your ID. Required when the camper is under 18."
+                  autoComplete="name"
+                  value={fields.guardianSigningName}
+                  onChange={(e) => setField('guardianSigningName', e.target.value)}
+                  error={errors.guardianSigningName}
+                />
+              ) : null}
+
+              <TextField
+                id="emergencyContact"
+                name="emergencyContact"
+                label="Emergency Contact"
+                hint="Name and relationship (e.g., Jordan Smith — grandmother)"
+                value={fields.emergencyContact}
+                onChange={(e) => setField('emergencyContact', e.target.value)}
+                error={errors.emergencyContact}
+              />
+              <TextField
+                id="emergencyPhone"
+                name="emergencyPhone"
+                type="tel"
+                label="Emergency Phone"
+                autoComplete="tel"
+                value={fields.emergencyPhone}
+                onChange={(e) => setField('emergencyPhone', e.target.value)}
+                error={errors.emergencyPhone}
+              />
+
+              <TextAreaField
+                id="notes"
+                name="notes"
+                label="Notes (optional)"
+                placeholder="Allergies, medications, accommodations, or other info coaches should know."
+                value={fields.notes}
+                onChange={(e) => setField('notes', e.target.value)}
+              />
+
+              {submitError ? (
+                <p className="rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-sm text-red-100" role="alert">
+                  {submitError}
+                </p>
+              ) : null}
+
+              <div className="rounded-xl border border-white/15 bg-neutral-950/50 p-4">
+                <label className="flex cursor-pointer gap-3 text-left">
+                  <input
+                    type="checkbox"
+                    name="waiverAccepted"
+                    checked={fields.waiverAccepted}
+                    onChange={(e) => setField('waiverAccepted', e.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-white/30 bg-neutral-900 text-red-600 focus:ring-2 focus:ring-red-500/50"
+                  />
+                  <span className="text-sm leading-snug text-neutral-200">
+                    I have read and agree to the{' '}
+                    <Link
+                      to="/liability-waiver"
+                      className="font-semibold text-red-300 underline underline-offset-2 hover:text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Liability Waiver
+                    </Link>{' '}
+                    and Release of Claims.
+                  </span>
+                </label>
+                {errors.waiverAccepted ? (
+                  <p className="mt-2 text-xs font-medium text-red-300" role="alert">
+                    {errors.waiverAccepted}
                   </p>
                 ) : null}
+              </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField
-                    id="parentName"
-                    name="parentName"
-                    label="Parent / guardian name"
-                    autoComplete="name"
-                    error={errors.parentName}
-                  />
-                  <TextField
-                    id="camperName"
-                    name="camperName"
-                    label="Camper name"
-                    autoComplete="off"
-                    error={errors.camperName}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <SelectField id="grade" name="grade" label="Grade" defaultValue="" error={errors.grade}>
-                    <option value="" disabled>
-                      Select grade
-                    </option>
-                    {['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'].map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </SelectField>
-                  <SelectField id="shirt" name="shirt" label="Shirt size" defaultValue="" error={errors.shirt}>
-                    <option value="" disabled>
-                      Select size
-                    </option>
-                    {['Youth S', 'Youth M', 'Youth L', 'Youth XL', 'Adult S', 'Adult M', 'Adult L', 'Adult XL'].map(
-                      (s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ),
-                    )}
-                  </SelectField>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField
-                    id="email"
-                    name="email"
-                    type="email"
-                    label="Email"
-                    autoComplete="email"
-                    error={errors.email}
-                  />
-                  <TextField
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    label="Phone number"
-                    autoComplete="tel"
-                    placeholder="(555) 555-5555"
-                    error={errors.phone}
-                  />
-                </div>
-
-                <TextField
-                  id="emergency"
-                  name="emergency"
-                  label="Emergency contact"
-                  hint="Name and relationship (e.g., Jordan Smith — grandmother)"
-                  error={errors.emergency}
-                />
-                <TextField
-                  id="emergencyPhone"
-                  name="emergencyPhone"
-                  type="tel"
-                  label="Emergency contact phone"
-                  autoComplete="tel"
-                  error={errors.emergencyPhone}
-                />
-
-                <TextAreaField
-                  id="notes"
-                  name="notes"
-                  label="Notes / medical info"
-                  placeholder="Allergies, medications, accommodations, or other info coaches should know."
-                />
-
-                <Button type="submit" variant="primary" className="w-full" disabled={status === 'submitting'}>
-                  {status === 'submitting' ? 'Submitting…' : 'Complete registration (demo)'}
-                </Button>
-                <p className="text-center text-[11px] text-neutral-500">
-                  Submitting here simulates a save — connect your payment provider before going live.
-                </p>
-              </form>
-            )}
+              <Button type="submit" variant="primary" className="w-full" disabled={!canSubmit || isSubmitting}>
+                {isSubmitting ? 'Sending registration…' : 'Continue to Payment'}
+              </Button>
+              <p className="text-center text-[11px] text-neutral-500">You will be redirected to secure payment</p>
+              <p className="text-center text-[11px] text-neutral-600">
+                Payments are processed by Stripe. Waiver acceptance ({WAIVER_VERSION}) and agreement time are stored with
+                your registration data in this browser.
+              </p>
+            </form>
           </div>
         </div>
       </Container>

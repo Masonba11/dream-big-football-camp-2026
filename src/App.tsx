@@ -1,75 +1,60 @@
-import { useCallback, useState } from 'react'
-import { LoadingIntro } from './components/LoadingIntro'
+import { Link, Route, Routes } from 'react-router-dom'
+import { HomePage } from './pages/HomePage'
+import { RegistrationSuccessPage } from './pages/RegistrationSuccessPage'
+import { RegistrationCancelPage } from './pages/RegistrationCancelPage'
+import { CampDetailsPage } from './pages/CampDetailsPage'
+import { WhatsIncludedPage } from './pages/WhatsIncludedPage'
+import { SchedulePage } from './pages/SchedulePage'
+import { GradesShirtsPage } from './pages/GradesShirtsPage'
+import { CheckInPage } from './pages/CheckInPage'
+import { AwardsRafflePage } from './pages/AwardsRafflePage'
+import { FAQPage } from './pages/FAQPage'
+import { ContactPage } from './pages/ContactPage'
+import { VolunteersPage } from './pages/VolunteersPage'
+import { GalleryPage } from './pages/GalleryPage'
+import { LiabilityWaiverPage } from './pages/LiabilityWaiverPage'
 import { Header } from './components/Header'
-import { Hero } from './components/Hero'
-import { CTAStrip } from './components/CTAStrip'
-import { AboutCamp } from './components/AboutCamp'
-import { WhatsIncluded } from './components/WhatsIncluded'
-import { CampDetails } from './components/CampDetails'
-import { RegistrationSection } from './components/RegistrationSection'
-import { LocationSection } from './components/LocationSection'
-import { VolunteersSection } from './components/VolunteersSection'
-import { GallerySection } from './components/GallerySection'
-import { FAQSection } from './components/FAQSection'
-import { ContactSection } from './components/ContactSection'
 import { Footer } from './components/Footer'
 
-export default function App() {
-  const [introDone, setIntroDone] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  })
-
-  const handleIntroComplete = useCallback(() => setIntroDone(true), [])
-
+function NotFoundPage() {
   return (
-    <>
-      {!introDone ? <LoadingIntro onComplete={handleIntroComplete} /> : null}
-      <a
-        href="#home"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[450] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-neutral-900"
-      >
-        Skip to content
-      </a>
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
       <Header />
-      <main>
-        <Hero />
-        <CTAStrip
-          eyebrow="Parents & athletes"
-          title="Lock in your camp spot before shirts are gone."
-          subtitle="Online registration closes July 13. Payment secures your athlete’s place."
-          primaryLabel="Start registration"
-          secondaryLabel="Camp details"
-          secondaryTarget="details"
-        />
-        <AboutCamp />
-        <CTAStrip
-          eyebrow="Make an impact"
-          title="Serve behind the scenes — volunteers keep the day on schedule."
-          subtitle="Arrive at 7:00 AM, pick up a blue volunteer shirt, and help athletes dream bigger."
-          primaryLabel="Volunteer signup"
-          primaryTarget="volunteers"
-          secondaryLabel="Email the team"
-          secondaryTarget="contact"
-        />
-        <WhatsIncluded />
-        <CampDetails />
-        <CTAStrip
-          eyebrow="Ready when you are"
-          title="Three simple pricing tiers. One unforgettable morning."
-          subtitle="Early bird, online, and day-of options — shirts are guaranteed only with timely online registration."
-          primaryLabel="Register now"
-          secondaryLabel="View FAQ"
-          secondaryTarget="faq"
-        />
-        <RegistrationSection />
-        <LocationSection />
-        <VolunteersSection />
-        <GallerySection />
-        <FAQSection />
-        <ContactSection />
+      <main className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-20 text-center text-neutral-200">
+        <h1 className="font-display text-4xl text-white">Page not found</h1>
+        <p className="mt-4 max-w-md text-neutral-400">
+          That page does not exist. Use the menu, the logo to go home, or register below.
+        </p>
+        <Link
+          to="/"
+          className="mt-8 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-700/40 bg-[var(--color-brand-red)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-red-900/25 transition hover:bg-[var(--color-brand-red-dark)]"
+        >
+          Back to home
+        </Link>
       </main>
       <Footer />
-    </>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/camp-details" element={<CampDetailsPage />} />
+      <Route path="/whats-included" element={<WhatsIncludedPage />} />
+      <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/grades-shirts" element={<GradesShirtsPage />} />
+      <Route path="/check-in" element={<CheckInPage />} />
+      <Route path="/awards-raffle" element={<AwardsRafflePage />} />
+      <Route path="/faq" element={<FAQPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/volunteers" element={<VolunteersPage />} />
+      <Route path="/gallery" element={<GalleryPage />} />
+      <Route path="/liability-waiver" element={<LiabilityWaiverPage />} />
+      <Route path="/success" element={<RegistrationSuccessPage />} />
+      <Route path="/cancel" element={<RegistrationCancelPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   )
 }

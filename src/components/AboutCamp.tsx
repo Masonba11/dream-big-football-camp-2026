@@ -18,8 +18,7 @@ export function AboutCamp() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <p className="absolute bottom-4 left-4 right-4 text-xs font-medium text-neutral-300">
-              Swap this image in <span className="text-white">src/config/site.ts</span> →{' '}
-              <code className="rounded bg-white/10 px-1 py-0.5 text-[10px] text-white">media.aboutFeature</code>
+              Camp imagery — update path in <span className="text-white">site config</span> when you have final photos.
             </p>
           </div>
           <div>

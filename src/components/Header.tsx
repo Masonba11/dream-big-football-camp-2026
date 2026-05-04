@@ -1,18 +1,29 @@
 import { useEffect, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
+import { RegisterNavLink } from './RegisterNavLink'
 import { Container } from './ui/Container'
-import { scrollToSection } from '../lib/scroll'
 
-const links = [
-  { id: 'home', label: 'Home' },
-  { id: 'about', label: 'About' },
-  { id: 'included', label: 'Included' },
-  { id: 'details', label: 'Details' },
-  { id: 'registration', label: 'Registration' },
-  { id: 'location', label: 'Location' },
-  { id: 'volunteers', label: 'Volunteers' },
-  { id: 'gallery', label: 'Gallery' },
-  { id: 'contact', label: 'Contact' },
+const navItems = [
+  { to: '/', label: 'Home' },
+  { to: '/camp-details', label: 'Camp details' },
+  { to: '/whats-included', label: 'Included' },
+  { to: '/schedule', label: 'Schedule' },
+  { to: '/grades-shirts', label: 'Shirts' },
+  { to: '/check-in', label: 'Check-in' },
+  { to: '/awards-raffle', label: 'Awards' },
+  { to: '/faq', label: 'FAQ' },
+  { to: '/liability-waiver', label: 'Waiver' },
+  { to: '/contact', label: 'Contact' },
+  { to: '/volunteers', label: 'Volunteer' },
+  { to: '/gallery', label: 'Gallery' },
 ] as const
+
+function navClassName(isActive: boolean) {
+  return [
+    'rounded-md px-2 py-2 text-[11px] font-semibold uppercase tracking-wide transition sm:px-2.5 sm:text-xs',
+    isActive ? 'bg-white/10 text-white' : 'text-neutral-300 hover:bg-white/5 hover:text-white',
+  ].join(' ')
+}
 
 export function Header() {
   const [open, setOpen] = useState(false)
@@ -32,11 +43,6 @@ export function Header() {
     }
   }, [open])
 
-  function go(id: string) {
-    setOpen(false)
-    scrollToSection(id)
-  }
-
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
@@ -47,56 +53,52 @@ export function Header() {
             : 'border-transparent bg-neutral-950/70 backdrop-blur-sm'
       }`}
     >
-      <Container className="flex h-16 items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => go('home')}
-          className="group flex min-w-0 flex-col items-start text-left"
-        >
-          <span className="font-display text-xl leading-none tracking-wide text-white sm:text-2xl">
-            DREAM BIG
-          </span>
+      <Container className="flex h-16 flex-wrap items-center justify-between gap-y-2 lg:h-auto lg:min-h-16 lg:py-2">
+        <Link to="/" className="group flex min-w-0 flex-col items-start text-left">
+          <span className="font-display text-xl leading-none tracking-wide text-white sm:text-2xl">DREAM BIG</span>
           <span className="max-w-[14rem] truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400 sm:text-[11px]">
             Football Camp 2026
           </span>
-        </button>
+        </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
-          {links.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => go(l.id)}
-              className="rounded-md px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-300 transition hover:bg-white/5 hover:text-white"
+        <nav className="hidden max-w-[calc(100%-8rem)] flex-1 flex-wrap items-center justify-end gap-x-0.5 gap-y-1 lg:flex xl:max-w-none" aria-label="Primary">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClassName(isActive)}
             >
-              {l.label}
-            </button>
+              {item.label}
+            </NavLink>
           ))}
-          <button
-            type="button"
-            onClick={() => go('registration')}
-            className="ml-2 rounded-lg bg-[var(--color-brand-red)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-md shadow-red-900/30 transition hover:bg-[var(--color-brand-red-dark)]"
-          >
+          <RegisterNavLink className="ml-1 shrink-0 rounded-lg bg-[var(--color-brand-red)] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white shadow-md shadow-red-900/30 transition hover:bg-[var(--color-brand-red-dark)] sm:ml-2 sm:px-4 sm:text-xs">
             Register
-          </button>
+          </RegisterNavLink>
         </nav>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white lg:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="sr-only">Menu</span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            {open ? (
-              <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            ) : (
-              <path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <RegisterNavLink className="rounded-lg bg-[var(--color-brand-red)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
+            Register
+          </RegisterNavLink>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 text-white"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="sr-only">Menu</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              {open ? (
+                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              ) : (
+                <path d="M4 7H20M4 12H20M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+        </div>
       </Container>
 
       <div
@@ -105,24 +107,30 @@ export function Header() {
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
       >
-        <nav className="flex flex-col gap-2 px-4 py-6" aria-label="Mobile primary">
-          {links.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => go(l.id)}
-              className="rounded-xl border border-white/20 bg-neutral-900 px-4 py-3.5 text-left text-sm font-semibold text-white shadow-sm transition hover:border-white/30 hover:bg-neutral-800 active:bg-neutral-800"
+        <nav className="flex max-h-[calc(100dvh-4rem)] flex-col gap-2 overflow-y-auto px-4 py-6" aria-label="Mobile primary">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `rounded-xl border px-4 py-3.5 text-left text-sm font-semibold transition active:bg-neutral-800 ${
+                  isActive
+                    ? 'border-red-500/50 bg-red-950/30 text-white'
+                    : 'border-white/20 bg-neutral-900 text-white hover:border-white/30 hover:bg-neutral-800'
+                }`
+              }
             >
-              {l.label}
-            </button>
+              {item.label}
+            </NavLink>
           ))}
-          <button
-            type="button"
-            onClick={() => go('registration')}
-            className="mt-2 rounded-xl bg-[var(--color-brand-red)] px-4 py-3 text-center text-sm font-bold text-white"
+          <RegisterNavLink
+            onNavigate={() => setOpen(false)}
+            className="mt-1 rounded-xl bg-[var(--color-brand-red)] px-4 py-3 text-center text-sm font-bold text-white"
           >
-            Register now
-          </button>
+            Register for camp
+          </RegisterNavLink>
         </nav>
       </div>
     </header>

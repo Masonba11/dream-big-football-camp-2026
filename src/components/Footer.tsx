@@ -1,16 +1,19 @@
+import { Link } from 'react-router-dom'
+import { RegisterNavLink } from './RegisterNavLink'
 import { Container } from './ui/Container'
-import { scrollToSection } from '../lib/scroll'
 
 const quick = [
-  ['About', 'about'],
-  ["What's included", 'included'],
-  ['Camp details', 'details'],
-  ['Register', 'registration'],
-  ['Location', 'location'],
-  ['Volunteers', 'volunteers'],
-  ['Gallery', 'gallery'],
-  ['FAQ', 'faq'],
-  ['Contact', 'contact'],
+  ['Camp details', '/camp-details'],
+  ["What's included", '/whats-included'],
+  ['Schedule', '/schedule'],
+  ['Shirts & grades', '/grades-shirts'],
+  ['Check-in', '/check-in'],
+  ['Awards & raffle', '/awards-raffle'],
+  ['FAQ', '/faq'],
+  ['Liability waiver', '/liability-waiver'],
+  ['Contact', '/contact'],
+  ['Volunteer', '/volunteers'],
+  ['Gallery', '/gallery'],
 ] as const
 
 export function Footer() {
@@ -19,12 +22,15 @@ export function Footer() {
       <Container>
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-display text-3xl tracking-wide text-white">Dream Big</p>
-            <p className="mt-1 text-sm font-semibold text-neutral-400">Football Camp 2026</p>
+            <Link to="/" className="inline-block">
+              <p className="font-display text-3xl tracking-wide text-white">Dream Big</p>
+              <p className="mt-1 text-sm font-semibold text-neutral-400">Football Camp 2026</p>
+            </Link>
             <p className="mt-3 text-sm text-neutral-400">Hosted by Braylen Russell</p>
-            <p className="mt-4 text-sm font-medium italic text-neutral-300">
-              Dream big. Compete hard. Have fun.
-            </p>
+            <p className="mt-4 text-sm font-medium italic text-neutral-300">Dream big. Compete hard. Have fun.</p>
+            <RegisterNavLink className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[var(--color-brand-red)] px-5 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-red-900/25 transition hover:bg-[var(--color-brand-red-dark)]">
+              Register for camp
+            </RegisterNavLink>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Event</p>
@@ -53,15 +59,16 @@ export function Footer() {
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Quick links</p>
             <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              {quick.map(([label, id]) => (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => scrollToSection(id)}
-                    className="text-left text-neutral-300 underline-offset-4 hover:text-white hover:underline"
-                  >
+              <li>
+                <Link to="/" className="text-neutral-300 underline-offset-4 hover:text-white hover:underline">
+                  Home
+                </Link>
+              </li>
+              {quick.map(([label, path]) => (
+                <li key={path}>
+                  <Link to={path} className="text-neutral-300 underline-offset-4 hover:text-white hover:underline">
                     {label}
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -1,10 +1,10 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
+import { RegisterNavLink } from './RegisterNavLink'
 import { media, pricing } from '../config/site'
 import { useAutoplayUnmutedVideo } from '../hooks/useAutoplayUnmutedVideo'
 import { Container } from './ui/Container'
-import { Button } from './ui/Button'
 import { Countdown } from './Countdown'
-import { scrollToSection } from '../lib/scroll'
 
 const highlights = [
   { title: `${pricing.online} online`, sub: 'Standard registration' },
@@ -16,6 +16,9 @@ const highlights = [
   { title: 'All ages drills', sub: 'Competitive, coach-led stations' },
 ] as const
 
+const heroBtnBase =
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold tracking-wide transition duration-200 active:scale-[0.98]'
+
 export function Hero() {
   const heroVideoRef = useRef<HTMLVideoElement>(null)
   useAutoplayUnmutedVideo(heroVideoRef)
@@ -25,7 +28,6 @@ export function Hero() {
       id="home"
       className="relative isolate overflow-hidden bg-neutral-950 md:min-h-[min(88svh,960px)]"
     >
-      {/* Mobile: short band + contain so the frame is not over-cropped. Desktop: full-bleed cover like a normal hero. */}
       <div className="absolute inset-x-0 top-0 z-0 max-md:h-[min(72svh,640px)] md:inset-0 md:h-auto">
         <video
           ref={heroVideoRef}
@@ -67,15 +69,23 @@ export function Hero() {
           </div>
 
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-            <Button type="button" variant="primary" onClick={() => scrollToSection('registration')}>
+            <RegisterNavLink
+              className={`${heroBtnBase} border border-red-700/40 bg-[var(--color-brand-red)] text-white shadow-lg shadow-red-900/25 hover:bg-[var(--color-brand-red-dark)]`}
+            >
               Register now
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => scrollToSection('volunteers')}>
+            </RegisterNavLink>
+            <Link
+              to="/volunteers"
+              className={`${heroBtnBase} border border-white/80 bg-white text-neutral-950 hover:bg-neutral-100`}
+            >
               Volunteer
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => scrollToSection('contact')}>
+            </Link>
+            <Link
+              to="/contact"
+              className={`${heroBtnBase} border border-white/25 bg-transparent text-white hover:border-white/50 hover:bg-white/5`}
+            >
               Contact us
-            </Button>
+            </Link>
           </div>
 
           <p className="mt-4 text-sm font-semibold text-amber-200/95">

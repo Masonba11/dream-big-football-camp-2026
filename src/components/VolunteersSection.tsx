@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { volunteerFormConfig } from '../config/formEndpoints'
+import { getVolunteerWeb3AccessKey } from '../config/web3formsAccess'
+import { submitWeb3Form } from '../lib/web3forms'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
 import { Button } from './ui/Button'
@@ -25,7 +26,7 @@ function validate(data: FormData): Errors {
   return errors
 }
 
-export function VolunteersSection() {
+export function VolunteersSection({ embedded = false }: { embedded?: boolean }) {
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [banner, setBanner] = useState('')
@@ -42,22 +43,32 @@ export function VolunteersSection() {
       return
     }
 
+    const accessKey = getVolunteerWeb3AccessKey()
+    if (!accessKey) {
+      setStatus('error')
+      setBanner(
+        'Volunteer form is not configured. Add VITE_WEB3FORMS_VOLUNTEER_ACCESS_KEY to .env.local (see .env.example).',
+      )
+      return
+    }
+
+    const vName = String(data.get('vName') ?? '').trim()
+    const vEmail = String(data.get('vEmail') ?? '').trim()
+    const vPhone = String(data.get('vPhone') ?? '').trim()
+    const vNotes = String(data.get('vNotes') ?? '').trim()
+
     setStatus('submitting')
     setBanner('')
 
     try {
-      if (volunteerFormConfig.backend === 'formspree' && volunteerFormConfig.actionUrl) {
-        await fetch(volunteerFormConfig.actionUrl, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: data,
-        })
-      } else if (volunteerFormConfig.backend === 'custom' && volunteerFormConfig.actionUrl) {
-        await fetch(volunteerFormConfig.actionUrl, { method: volunteerFormConfig.method, body: data })
-      } else {
-        await new Promise((r) => setTimeout(r, 700))
-        console.info('[Dream Big] Volunteer payload (placeholder):', Object.fromEntries(data.entries()))
-      }
+      await submitWeb3Form(accessKey, {
+        subject: 'Dream Big Football Camp 2026 — Volunteer signup',
+        from_name: vName,
+        email: vEmail,
+        phone: vPhone,
+        message: vNotes || '(no notes)',
+        form_type: 'volunteer',
+      })
       setStatus('success')
       setBanner("Thanks — we'll follow up with GroupMe details and assignments.")
       form.reset()
@@ -67,19 +78,25 @@ export function VolunteersSection() {
     }
   }
 
-  return (
-    <SectionShell id="volunteers" muted>
-      <Container>
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+  const grid = (
+    <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">Join the team behind the team</p>
-            <h2 className="mt-3 font-display text-4xl tracking-wide text-white sm:text-5xl">Volunteers</h2>
-            <p className="mt-4 text-neutral-300">
-              We rely on great volunteers to make this camp successful. Clear roles, early arrival, and organized
-              communication keep the day smooth for athletes and families.
-            </p>
+            {!embedded ? (
+              <>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">Join the team behind the team</p>
+                <h2 className="mt-3 font-display text-4xl tracking-wide text-white sm:text-5xl">Volunteers</h2>
+                <p className="mt-4 text-neutral-300">
+                  We rely on great volunteers to make this camp successful. Clear roles, early arrival, and organized
+                  communication keep the day smooth for athletes and families.
+                </p>
+              </>
+            ) : (
+              <p className="text-neutral-300">
+                We rely on great volunteers to make this camp successful. Use the form to share your availability.
+              </p>
+            )}
 
-            <div className="mt-8 space-y-6">
+            <div className={`space-y-6 ${embedded ? 'mt-6' : 'mt-8'}`}>
               <InfoBlock title="Volunteer info">
                 <ul className="list-disc space-y-2 pl-4 text-sm text-neutral-300">
                   <li>Arrival at 7:00 AM for briefing and station setup.</li>
@@ -109,8 +126,8 @@ export function VolunteersSection() {
           <div className="rounded-3xl border border-white/10 bg-neutral-900/60 p-6 shadow-[var(--shadow-glow)] backdrop-blur-md sm:p-8">
             <h3 className="font-display text-3xl tracking-wide text-white">Volunteer signup</h3>
             <p className="mt-2 text-sm text-neutral-400">
-              Share your availability — connect this form to Formspree, Google Forms, or your backend in{' '}
-              <code className="rounded bg-white/10 px-1 py-0.5 text-[11px] text-white">formEndpoints.ts</code>.
+              Share your availability. Submissions are delivered securely via Web3Forms (configure keys in{' '}
+              <code className="rounded bg-white/10 px-1 py-0.5 text-[11px] text-white">.env.local</code>).
             </p>
 
             {status === 'success' ? (
@@ -118,7 +135,7 @@ export function VolunteersSection() {
                 className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-5 text-sm text-emerald-100"
                 role="status"
               >
-                <p className="font-semibold text-emerald-50">Received (demo).</p>
+                <p className="font-semibold text-emerald-50">Received!</p>
                 <p className="mt-2">{banner}</p>
                 <Button type="button" variant="secondary" className="mt-4 w-full" onClick={() => setStatus('idle')}>
                   Submit another volunteer
@@ -142,13 +159,21 @@ export function VolunteersSection() {
                   placeholder="Times you can serve, coaching experience, preferred stations, etc."
                 />
                 <Button type="submit" variant="primary" className="w-full" disabled={status === 'submitting'}>
-                  {status === 'submitting' ? 'Sending…' : 'Sign up to volunteer (demo)'}
+                  {status === 'submitting' ? 'Sending…' : 'Sign up to volunteer'}
                 </Button>
               </form>
             )}
           </div>
         </div>
-      </Container>
+  )
+
+  if (embedded) {
+    return <div className="border-t border-white/10 pt-8">{grid}</div>
+  }
+
+  return (
+    <SectionShell id="volunteers" muted>
+      <Container>{grid}</Container>
     </SectionShell>
   )
 }
