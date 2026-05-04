@@ -27,11 +27,17 @@ const DEFAULT_FRONTEND = 'http://localhost:3000'
 const FRONTEND_ORIGIN = String(process.env.FRONTEND_ORIGIN || DEFAULT_FRONTEND).replace(/\/$/, '')
 
 /** Browser tab origins allowed for CORS and for Stripe return URLs (via clientOrigin in POST body). */
-const ALLOWED_BROWSER_ORIGINS = new Set([
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  FRONTEND_ORIGIN,
-])
+function buildAllowedBrowserOrigins() {
+  const set = new Set(['http://localhost:3000', 'http://127.0.0.1:3000'])
+  if (FRONTEND_ORIGIN) set.add(FRONTEND_ORIGIN)
+  for (const raw of String(process.env.ALLOWED_ORIGINS || '').split(',')) {
+    const o = raw.trim().replace(/\/$/, '')
+    if (o) set.add(o)
+  }
+  return set
+}
+
+const ALLOWED_BROWSER_ORIGINS = buildAllowedBrowserOrigins()
 
 const app = express()
 
@@ -55,7 +61,7 @@ app.get('/', (_req, res) => {
 <body style="font-family:system-ui,sans-serif;padding:2rem;max-width:40rem;line-height:1.5">
   <h1>Payment API (port ${PORT})</h1>
   <p>This URL is only for the Stripe checkout server. It is <strong>not</strong> the camp website.</p>
-  <p>Open registration here: <a href="http://localhost:3000/">http://localhost:3000</a></p>
+  <p>Open registration here: <a href="${FRONTEND_ORIGIN}/">${FRONTEND_ORIGIN}</a> (set FRONTEND_ORIGIN in <code>.env</code> if you use a LAN URL or hostname).</p>
 </body></html>`)
 })
 
@@ -130,6 +136,10 @@ app.post('/create-checkout-session', async (req, res) => {
     emergencyContact,
     emergencyPhone,
     notes,
+    camperAgeGroup,
+    guardianSigningName,
+    waiverVersion,
+    waiverAgreedAt,
   } = req.body ?? {}
 
   const returnBase =
@@ -168,6 +178,10 @@ app.post('/create-checkout-session', async (req, res) => {
         emergency_contact: metaString(emergencyContact),
         emergency_phone: metaString(emergencyPhone),
         notes: metaString(notes),
+        camper_age_group: metaString(camperAgeGroup),
+        guardian_signing_name: metaString(guardianSigningName),
+        waiver_version: metaString(waiverVersion),
+        waiver_agreed_at: metaString(waiverAgreedAt),
       },
       // Stripe replaces {CHECKOUT_SESSION_ID} after payment (required pattern for Checkout).
       success_url: `${returnBase}/success?session_id={CHECKOUT_SESSION_ID}`,

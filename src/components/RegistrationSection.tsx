@@ -131,12 +131,6 @@ export function RegistrationSection() {
     if (Object.keys(next).length) return
 
     const accessKey = getRegistrationWeb3AccessKey()
-    if (!accessKey) {
-      setSubmitError(
-        'Registration form is not configured. Add VITE_WEB3FORMS_REGISTRATION_ACCESS_KEY to .env.local (see .env.example).',
-      )
-      return
-    }
 
     const agreedAt = new Date().toISOString()
 
@@ -180,10 +174,50 @@ export function RegistrationSection() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
     } catch {
-      // Still redirect if storage fails
+      // Still try checkout if storage fails
     }
 
-    window.location.href = STRIPE_PAYMENT_LINK
+    const checkoutPayload = {
+      clientOrigin: window.location.origin,
+      parentName: formData.parentName,
+      camperName: formData.camperName,
+      grade: formData.grade,
+      shirtSize: formData.shirtSize,
+      email: formData.email,
+      phone: formData.phone,
+      emergencyContact: formData.emergencyContact,
+      emergencyPhone: formData.emergencyPhone,
+      notes: formData.notes,
+      camperAgeGroup: formData.camperAgeGroup,
+      guardianSigningName: formData.guardianSigningName,
+      waiverVersion: formData.waiverVersion,
+      waiverAgreedAt: formData.waiverAgreedAt,
+    }
+
+    try {
+      const r = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload),
+      })
+      const data = (await r.json().catch(() => ({}))) as { url?: string; error?: string }
+      if (r.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      if (r.status === 503) {
+        window.location.href = STRIPE_PAYMENT_LINK
+        return
+      }
+      setIsSubmitting(false)
+      setSubmitError(data.error || 'Could not start checkout. Try again.')
+    } catch {
+      setIsSubmitting(false)
+      const devHint = import.meta.env.DEV
+        ? ' Run npm run dev and open the “Network” URL Vite prints. Run npm run dev:api (or npm run dev:all) for checkout. If you use an IP or hostname instead of localhost, set the same origin in server/.env as ALLOWED_ORIGINS=... and restart the API.'
+        : ''
+      setSubmitError(`Could not reach the payment server.${devHint}`)
+    }
   }
 
   return (
