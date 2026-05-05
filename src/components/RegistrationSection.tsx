@@ -24,7 +24,7 @@ type CamperAgeGroup = '' | 'under18' | '18plus'
 
 type CampRegistrationForm = {
   parentName: string
-  camperName: string
+  playerName: string
   email: string
   phone: string
   grade: string
@@ -41,7 +41,7 @@ type Errors = Partial<Record<string, string>>
 
 const initialFields: CampRegistrationForm = {
   parentName: '',
-  camperName: '',
+  playerName: '',
   email: '',
   phone: '',
   grade: '',
@@ -70,7 +70,7 @@ function validateFields(f: CampRegistrationForm): Errors {
   }
 
   req('parentName', 'Parent name')
-  req('camperName', 'Camper name')
+  req('playerName', 'Player name')
   req('email', 'Email')
   req('phone', 'Phone number')
   req('grade', 'Grade')
@@ -143,7 +143,7 @@ export function RegistrationSection() {
 
     const formData = {
       parentName: fields.parentName.trim(),
-      camperName: fields.camperName.trim(),
+      playerName: fields.playerName.trim(),
       email: fields.email.trim(),
       phone: fields.phone.trim(),
       grade: fields.grade.trim(),
@@ -167,7 +167,7 @@ export function RegistrationSection() {
     setIsSubmitting(true)
     try {
       await submitWeb3Form(accessKey, {
-        subject: 'Dream Big Football Camp 2026 — Player registration (pre-payment)',
+        subject: `Dream Big Football Camp 2026 — Registration: ${formData.playerName}`,
         from_name: formData.parentName,
         form_type: 'player_registration',
         ...formData,
@@ -192,7 +192,7 @@ export function RegistrationSection() {
     const checkoutPayload = {
       clientOrigin: window.location.origin,
       parentName: formData.parentName,
-      camperName: formData.camperName,
+      playerName: formData.playerName,
       grade: formData.grade,
       shirtSize: formData.shirtSize,
       email: formData.email,
@@ -294,13 +294,14 @@ export function RegistrationSection() {
                   error={errors.parentName}
                 />
                 <TextField
-                  id="camperName"
-                  name="camperName"
-                  label="Camper Name"
+                  id="playerName"
+                  name="playerName"
+                  label="Player name"
+                  hint="The athlete attending camp (first and last)."
                   autoComplete="off"
-                  value={fields.camperName}
-                  onChange={(e) => setField('camperName', e.target.value)}
-                  error={errors.camperName}
+                  value={fields.playerName}
+                  onChange={(e) => setField('playerName', e.target.value)}
+                  error={errors.playerName}
                 />
               </div>
 

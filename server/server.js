@@ -140,6 +140,7 @@ app.post('/create-checkout-session', async (req, res) => {
   const {
     clientOrigin,
     parentName,
+    playerName,
     camperName,
     grade,
     shirtSize,
@@ -153,6 +154,8 @@ app.post('/create-checkout-session', async (req, res) => {
     waiverVersion,
     waiverAgreedAt,
   } = req.body ?? {}
+
+  const athleteName = metaString(playerName || camperName)
 
   const co = normalizeOrigin(clientOrigin)
   const originHdr = normalizeOrigin(req.get('Origin'))
@@ -183,7 +186,8 @@ app.post('/create-checkout-session', async (req, res) => {
       ],
       metadata: {
         parent_name: metaString(parentName),
-        camper_name: metaString(camperName),
+        player_name: athleteName,
+        camper_name: athleteName,
         grade: metaString(grade),
         shirt_size: metaString(shirtSize),
         phone: metaString(phone),

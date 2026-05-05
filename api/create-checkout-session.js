@@ -143,6 +143,7 @@ export default async function handler(req, res) {
 
     const {
       parentName,
+      playerName,
       camperName,
       grade,
       shirtSize,
@@ -156,6 +157,8 @@ export default async function handler(req, res) {
       waiverVersion,
       waiverAgreedAt,
     } = body
+
+    const athleteName = metaString(playerName || camperName)
 
     const emailTrim = metaString(email)
     if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
@@ -180,7 +183,8 @@ export default async function handler(req, res) {
       ],
       metadata: {
         parent_name: metaString(parentName),
-        camper_name: metaString(camperName),
+        player_name: athleteName,
+        camper_name: athleteName,
         grade: metaString(grade),
         shirt_size: metaString(shirtSize),
         phone: metaString(phone),
