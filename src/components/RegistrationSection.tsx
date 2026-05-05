@@ -200,7 +200,13 @@ export function RegistrationSection() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(checkoutPayload),
       })
-      const data = (await r.json().catch(() => ({}))) as { url?: string; error?: string }
+      const text = await r.text()
+      let data = {} as { url?: string; error?: string }
+      try {
+        data = text ? (JSON.parse(text) as { url?: string; error?: string }) : {}
+      } catch {
+        data = { error: text ? text.slice(0, 240) : `Unexpected response (HTTP ${r.status})` }
+      }
       if (r.ok && data.url) {
         window.location.href = data.url
         return
@@ -210,7 +216,9 @@ export function RegistrationSection() {
         return
       }
       setIsSubmitting(false)
-      setSubmitError(data.error || 'Could not start checkout. Try again.')
+      setSubmitError(
+        data.error || `Could not start checkout (HTTP ${r.status}). If this keeps happening, contact the camp.`,
+      )
     } catch {
       setIsSubmitting(false)
       const devHint = import.meta.env.DEV

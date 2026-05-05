@@ -5,21 +5,60 @@
 
 const Stripe = require('stripe')
 
+function normalizeOrigin(input) {
+  const s = String(input ?? '').trim().replace(/\/$/, '')
+  if (!s) return ''
+  try {
+    return new URL(s).origin
+  } catch {
+    return s
+  }
+}
+
 function getAllowedOrigins() {
   const set = new Set(['http://localhost:3000', 'http://127.0.0.1:3000'])
   const site = String(process.env.SITE_URL ?? '')
     .trim()
     .replace(/\/$/, '')
-  if (site) set.add(site)
+  if (site) set.add(normalizeOrigin(site) || site)
   for (const raw of String(process.env.ALLOWED_ORIGINS ?? '').split(',')) {
     const o = raw.trim().replace(/\/$/, '')
-    if (o) set.add(o)
+    if (o) set.add(normalizeOrigin(o) || o)
   }
   const vu = String(process.env.VERCEL_URL ?? '').trim()
-  if (vu) set.add(`https://${vu}`)
+  if (vu) set.add(normalizeOrigin(`https://${vu}`))
   const vbu = String(process.env.VERCEL_BRANCH_URL ?? '').trim()
-  if (vbu) set.add(`https://${vbu}`)
+  if (vbu) set.add(normalizeOrigin(`https://${vbu}`))
+  const vprod = String(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? '').trim().replace(/\/$/, '')
+  if (vprod) set.add(normalizeOrigin(vprod.startsWith('http') ? vprod : `https://${vprod}`))
   return set
+}
+
+/** True if this tab origin is allowed for Stripe return URLs (allowlist + same request as browser). */
+function isAllowedCheckoutOrigin(req, clientOrigin) {
+  const co = normalizeOrigin(clientOrigin)
+  if (!co) return false
+
+  const staticSet = getAllowedOrigins()
+  if (staticSet.has(co)) return true
+
+  const originHdr = normalizeOrigin(req.headers.origin)
+  if (originHdr && originHdr === co) return true
+
+  const rawHost = String(req.headers['x-forwarded-host'] || req.headers.host || '')
+    .split(',')[0]
+    .trim()
+  if (rawHost) {
+    const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim() || 'https'
+    try {
+      const fromFwd = new URL(`${proto}://${rawHost}`).origin
+      if (fromFwd === co) return true
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return false
 }
 
 function metaString(value) {
@@ -89,15 +128,12 @@ module.exports = async (req, res) => {
   }
 
   const body = await readJsonBody(req)
-  const allowed = getAllowedOrigins()
 
-  const clientOrigin = String(body.clientOrigin ?? '')
-    .trim()
-    .replace(/\/$/, '')
-  if (!clientOrigin || !allowed.has(clientOrigin)) {
+  const clientOrigin = normalizeOrigin(body.clientOrigin)
+  if (!clientOrigin || !isAllowedCheckoutOrigin(req, clientOrigin)) {
     return res.status(400).json({
       error:
-        'Invalid or missing clientOrigin. Open the site from an allowed URL (e.g. your Vercel URL or set SITE_URL / ALLOWED_ORIGINS).',
+        'Checkout could not verify this site address. Refresh and try again, or set SITE_URL / ALLOWED_ORIGINS in Vercel to match the URL you use (including www).',
     })
   }
 

@@ -22,16 +22,27 @@ if (envResult.error) {
 const express = require('express')
 const cors = require('cors')
 
+function normalizeOrigin(input) {
+  const s = String(input ?? '').trim().replace(/\/$/, '')
+  if (!s) return ''
+  try {
+    return new URL(s).origin
+  } catch {
+    return s
+  }
+}
+
 const PORT = Number(process.env.PORT) || 4242
 const DEFAULT_FRONTEND = 'http://localhost:3000'
-const FRONTEND_ORIGIN = String(process.env.FRONTEND_ORIGIN || DEFAULT_FRONTEND).replace(/\/$/, '')
+const FRONTEND_ORIGIN =
+  normalizeOrigin(String(process.env.FRONTEND_ORIGIN || DEFAULT_FRONTEND).trim()) || DEFAULT_FRONTEND
 
 /** Browser tab origins allowed for CORS and for Stripe return URLs (via clientOrigin in POST body). */
 function buildAllowedBrowserOrigins() {
   const set = new Set(['http://localhost:3000', 'http://127.0.0.1:3000'])
   if (FRONTEND_ORIGIN) set.add(FRONTEND_ORIGIN)
   for (const raw of String(process.env.ALLOWED_ORIGINS || '').split(',')) {
-    const o = raw.trim().replace(/\/$/, '')
+    const o = normalizeOrigin(raw.trim())
     if (o) set.add(o)
   }
   return set
@@ -45,7 +56,8 @@ app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true)
-      if (ALLOWED_BROWSER_ORIGINS.has(origin)) return callback(null, true)
+      const o = normalizeOrigin(origin)
+      if (o && ALLOWED_BROWSER_ORIGINS.has(o)) return callback(null, true)
       return callback(null, false)
     },
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -142,10 +154,10 @@ app.post('/create-checkout-session', async (req, res) => {
     waiverAgreedAt,
   } = req.body ?? {}
 
+  const co = normalizeOrigin(clientOrigin)
+  const originHdr = normalizeOrigin(req.get('Origin'))
   const returnBase =
-    typeof clientOrigin === 'string' && ALLOWED_BROWSER_ORIGINS.has(clientOrigin)
-      ? clientOrigin
-      : FRONTEND_ORIGIN
+    (co && originHdr && co === originHdr) || (co && ALLOWED_BROWSER_ORIGINS.has(co)) ? co : FRONTEND_ORIGIN
 
   const emailTrim = metaString(email)
   if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
