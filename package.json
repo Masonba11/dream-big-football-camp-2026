@@ -9,6 +9,7 @@
     "dev:api": "npm start --prefix ./server",
     "dev:all": "concurrently -n web,api -c cyan,magenta \"npm run dev\" \"npm run dev:api\"",
     "build": "tsc -b && vite build",
+    "generate:gallery": "node scripts/generate-gallery-assets.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

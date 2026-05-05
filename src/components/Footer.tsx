@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { GalleryPhotoStrip } from './GalleryPhotoStrip'
 import { RegisterNavLink } from './RegisterNavLink'
 import { Container } from './ui/Container'
 
@@ -74,7 +75,16 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <p className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-neutral-500">
+        <div className="mt-10 border-t border-white/10 pt-8">
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-neutral-500">Camp photos</p>
+          <GalleryPhotoStrip offset={0} className="mt-3" />
+          <p className="mt-3 text-center text-sm">
+            <Link to="/gallery" className="font-semibold text-red-300 underline-offset-4 hover:text-white hover:underline">
+              Open full gallery
+            </Link>
+          </p>
+        </div>
+        <p className="mt-10 border-t border-white/10 pt-8 text-center text-xs text-neutral-500">
           © {new Date().getFullYear()} Dream Big Football Camp. All rights reserved.
         </p>
       </Container>

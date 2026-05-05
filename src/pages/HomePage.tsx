@@ -4,6 +4,7 @@ import { LoadingIntro } from '../components/LoadingIntro'
 import { Header } from '../components/Header'
 import { Hero } from '../components/Hero'
 import { AboutCamp } from '../components/AboutCamp'
+import { GallerySection } from '../components/GallerySection'
 import { RegistrationSection } from '../components/RegistrationSection'
 import { Footer } from '../components/Footer'
 import { scrollToSection } from '../lib/scroll'
@@ -40,6 +41,7 @@ export function HomePage() {
         <Hero />
         <AboutCamp />
         <RegistrationSection />
+        <GallerySection embedded maxItems={12} />
       </main>
       <Footer />
     </>

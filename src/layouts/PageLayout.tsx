@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { GalleryPhotoStrip } from '../components/GalleryPhotoStrip'
 import { Header } from '../components/Header'
 import { Footer } from '../components/Footer'
 import { Container } from '../components/ui/Container'
@@ -24,6 +25,7 @@ export function PageLayout({ title, eyebrow, children }: PageLayoutProps) {
           >
             <span aria-hidden>←</span> Back to home
           </Link>
+          <GalleryPhotoStrip offset={0.22} className="mt-6" />
           {eyebrow ? (
             <p className="mt-8 text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">{eyebrow}</p>
           ) : null}

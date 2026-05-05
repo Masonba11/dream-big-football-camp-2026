@@ -1,3 +1,4 @@
+import { LocationSection } from '../components/LocationSection'
 import { PageLayout } from '../layouts/PageLayout'
 import { pricing, registrationCloses } from '../config/site'
 
@@ -44,6 +45,8 @@ export function CampDetailsPage() {
           Online registration closes July 13. Payment secures your athlete&apos;s place.
         </p>
       </section>
+
+      <LocationSection />
     </PageLayout>
   )
 }

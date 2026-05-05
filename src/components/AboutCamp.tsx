@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { media } from '../config/site'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
@@ -10,7 +11,7 @@ export function AboutCamp() {
           <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[var(--shadow-glow)]">
             <img
               src={media.aboutFeature}
-              alt="Placeholder camp imagery — replace in src/config/site.ts"
+              alt="Dream Big Football Camp"
               className="aspect-[4/3] w-full object-cover transition duration-700 hover:scale-[1.03]"
               width={1200}
               height={900}
@@ -18,7 +19,11 @@ export function AboutCamp() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <p className="absolute bottom-4 left-4 right-4 text-xs font-medium text-neutral-300">
-              Camp imagery — update path in <span className="text-white">site config</span> when you have final photos.
+              From camp — see the{' '}
+              <Link to="/gallery" className="font-semibold text-white underline-offset-2 hover:underline">
+                full gallery
+              </Link>{' '}
+              for more moments.
             </p>
           </div>
           <div>

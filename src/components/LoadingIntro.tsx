@@ -166,7 +166,7 @@ export function LoadingIntro({ onComplete }: Props) {
             />
           </div>
           <p className="text-center text-[10px] text-neutral-600 sm:text-[11px]">
-            Encrypted session · this sequence is cosmetic only
+            Intro animation only — no password or sign-in required
           </p>
         </div>
       </div>

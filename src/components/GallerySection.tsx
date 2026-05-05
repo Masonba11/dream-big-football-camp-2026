@@ -1,11 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { media } from '../config/site'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
 
-export function GallerySection({ embedded = false }: { embedded?: boolean }) {
+export function GallerySection({
+  embedded = false,
+  maxItems,
+}: {
+  embedded?: boolean
+  /** When set, only show first N photos (e.g. home preview). */
+  maxItems?: number
+}) {
+  const items = useMemo(
+    () => (maxItems != null ? media.gallery.slice(0, maxItems) : [...media.gallery]),
+    [maxItems],
+  )
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
-  const active = activeIndex === null ? null : media.gallery[activeIndex]
+  const active = activeIndex === null ? null : items[activeIndex]
 
   useEffect(() => {
     if (activeIndex === null) return
@@ -28,15 +40,15 @@ export function GallerySection({ embedded = false }: { embedded?: boolean }) {
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">Camp recap</p>
           <h2 className="mt-3 font-display text-4xl tracking-wide text-white sm:text-5xl">Photo gallery</h2>
           <p className="mt-3 text-neutral-400">
-            Professional-style backdrop photos, group shots, action frames, organized autograph lines, and post-camp
-            highlights — including memories from the 2025 camp. Swap images in{' '}
-            <code className="rounded bg-white/10 px-1 py-0.5 text-xs text-white">src/config/site.ts</code>.
+            Photos from Dream Big Football Camp — action, drills, and camp-day energy. Add more images to{' '}
+            <code className="rounded bg-white/10 px-1 py-0.5 text-xs text-white">public/gallery</code> and run{' '}
+            <code className="rounded bg-white/10 px-1 py-0.5 text-xs text-white">npm run generate:gallery</code>.
           </p>
         </div>
       ) : null}
 
       <div className={`columns-1 gap-4 sm:columns-2 lg:columns-3 ${embedded ? '' : 'mt-12'}`}>
-        {media.gallery.map((item, index) => (
+        {items.map((item, index) => (
           <button
             key={item.id}
             type="button"
@@ -64,6 +76,17 @@ export function GallerySection({ embedded = false }: { embedded?: boolean }) {
           </button>
         ))}
       </div>
+
+      {maxItems != null && media.gallery.length > maxItems ? (
+        <p className="mt-8 text-center">
+          <Link
+            to="/gallery"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-red-700/40 bg-[var(--color-brand-red)] px-6 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-red-900/25 transition hover:bg-[var(--color-brand-red-dark)]"
+          >
+            View all {media.gallery.length} photos
+          </Link>
+        </p>
+      ) : null}
 
       {active ? (
         <div

@@ -1,3 +1,4 @@
+import { campGallery } from '../config/galleryAssets'
 import { Container } from './ui/Container'
 import { SectionShell } from './ui/SectionShell'
 
@@ -39,34 +40,36 @@ export function LocationSection() {
 
           <div>
             <div className="overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/60 shadow-[var(--shadow-glow)]">
-              <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-neutral-800 to-neutral-950">
-                <div className="absolute inset-0 opacity-30">
-                  <div
-                    className="h-full w-full"
-                    style={{
-                      backgroundImage:
-                        'linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-                      backgroundSize: '28px 28px',
-                    }}
-                  />
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600/20 text-red-300">
-                    <MapPin />
+              <div className="relative aspect-[4/3] w-full">
+                <img
+                  src={
+                    campGallery.length
+                      ? campGallery[Math.min(46, campGallery.length - 1)].src
+                      : ''
+                  }
+                  alt="Camp at the field — Benton Athletic Complex area"
+                  className="h-full w-full object-cover"
+                  width={1200}
+                  height={900}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-600/30 text-red-200 ring-1 ring-white/10">
+                      <MapPin />
+                    </div>
+                    <div>
+                      <p className="font-display text-xl tracking-wide text-white sm:text-2xl">Benton Athletic Complex</p>
+                      <p className="mt-1 text-sm text-neutral-300">
+                        Camp photos from Dream Big — add a Google Maps embed here anytime for turn-by-turn directions.
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-4 font-display text-2xl tracking-wide text-white">Map embed placeholder</p>
-                  <p className="mt-2 max-w-xs text-sm text-neutral-400">
-                    Replace this block with a Google Maps iframe or static map image pointing to Benton Athletic
-                    Complex.
-                  </p>
-                  <p className="mt-4 rounded-lg bg-black/40 px-3 py-2 font-mono text-[11px] text-neutral-400">
-                    {/* <iframe title="Benton Athletic Complex" src="https://www.google.com/maps/embed?..." /> */}
-                    src/components/LocationSection.tsx
-                  </p>
                 </div>
               </div>
               <div className="border-t border-white/10 p-4 text-xs text-neutral-500">
-                Tip: drop an iframe from Google Maps “Share → Embed map” into this panel for a polished embed.
+                Tip: use Google Maps “Share → Embed map” and paste an iframe above the photo if you want a live map.
               </div>
             </div>
           </div>
