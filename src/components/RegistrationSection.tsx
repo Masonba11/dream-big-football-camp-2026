@@ -11,6 +11,13 @@ import { SelectField, TextAreaField, TextField } from './ui/Field'
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/cNi3cv3ir7T18wybtl4c800'
 
+/** Serverless Checkout Session — optional. Unset = families go straight to the Stripe Payment Link (no /api, works on any static host). */
+function wantsStripeCheckoutSessionApi(): boolean {
+  return ['1', 'true', 'yes'].includes(
+    String(import.meta.env.VITE_USE_STRIPE_CHECKOUT_SESSION ?? '').toLowerCase(),
+  )
+}
+
 const STORAGE_KEY = 'campRegistration'
 
 type CamperAgeGroup = '' | 'under18' | '18plus'
@@ -175,6 +182,11 @@ export function RegistrationSection() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
     } catch {
       // Still try checkout if storage fails
+    }
+
+    if (!wantsStripeCheckoutSessionApi()) {
+      window.location.href = STRIPE_PAYMENT_LINK
+      return
     }
 
     const checkoutPayload = {
