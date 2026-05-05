@@ -1,9 +1,11 @@
 /**
  * Vercel serverless: Stripe Checkout (same contract as local server/server.js).
- * Set STRIPE_SECRET_KEY in Vercel project env. Optional: SITE_URL, ALLOWED_ORIGINS (comma-separated).
+ * Must be ESM: root package.json has "type": "module".
+ *
+ * Set STRIPE_SECRET_KEY in Vercel. Optional: SITE_URL, ALLOWED_ORIGINS (comma-separated).
  */
 
-const Stripe = require('stripe')
+import Stripe from 'stripe'
 
 function normalizeOrigin(input) {
   const s = String(input ?? '').trim().replace(/\/$/, '')
@@ -67,9 +69,8 @@ function metaString(value) {
 }
 
 function rawSecretKey() {
-  const k = String(process.env.STRIPE_SECRET_KEY ?? process.env.STRIPE_API_KEY ?? '')
+  return String(process.env.STRIPE_SECRET_KEY ?? process.env.STRIPE_API_KEY ?? '')
     .replace(/\s/g, '')
-  return k
 }
 
 function getStripeContext() {
@@ -113,54 +114,54 @@ async function readJsonBody(req) {
   }
 }
 
-module.exports = async (req, res) => {
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Allow', 'POST, OPTIONS')
-    return res.status(204).end()
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
-  const { stripe, setupError } = getStripeContext()
-  if (!stripe) {
-    return res.status(503).json({ error: setupError })
-  }
-
-  const body = await readJsonBody(req)
-
-  const clientOrigin = normalizeOrigin(body.clientOrigin)
-  if (!clientOrigin || !isAllowedCheckoutOrigin(req, clientOrigin)) {
-    return res.status(400).json({
-      error:
-        'Checkout could not verify this site address. Refresh and try again, or set SITE_URL / ALLOWED_ORIGINS in Vercel to match the URL you use (including www).',
-    })
-  }
-
-  const returnBase = clientOrigin
-
-  const {
-    parentName,
-    camperName,
-    grade,
-    shirtSize,
-    email,
-    phone,
-    emergencyContact,
-    emergencyPhone,
-    notes,
-    camperAgeGroup,
-    guardianSigningName,
-    waiverVersion,
-    waiverAgreedAt,
-  } = body
-
-  const emailTrim = metaString(email)
-  if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-    return res.status(400).json({ error: 'A valid email is required for checkout.' })
-  }
-
+export default async function handler(req, res) {
   try {
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Allow', 'POST, OPTIONS')
+      return res.status(204).end()
+    }
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' })
+    }
+
+    const { stripe, setupError } = getStripeContext()
+    if (!stripe) {
+      return res.status(503).json({ error: setupError })
+    }
+
+    const body = await readJsonBody(req)
+
+    const clientOrigin = normalizeOrigin(body.clientOrigin)
+    if (!clientOrigin || !isAllowedCheckoutOrigin(req, clientOrigin)) {
+      return res.status(400).json({
+        error:
+          'Checkout could not verify this site address. Refresh and try again, or set SITE_URL / ALLOWED_ORIGINS in Vercel to match the URL you use (including www).',
+      })
+    }
+
+    const returnBase = clientOrigin
+
+    const {
+      parentName,
+      camperName,
+      grade,
+      shirtSize,
+      email,
+      phone,
+      emergencyContact,
+      emergencyPhone,
+      notes,
+      camperAgeGroup,
+      guardianSigningName,
+      waiverVersion,
+      waiverAgreedAt,
+    } = body
+
+    const emailTrim = metaString(email)
+    if (!emailTrim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      return res.status(400).json({ error: 'A valid email is required for checkout.' })
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -197,7 +198,10 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({ url: session.url })
   } catch (err) {
-    const message = err && err.message ? err.message : 'Checkout failed'
-    return res.status(500).json({ error: message })
+    const message = err instanceof Error ? err.message : 'Checkout failed'
+    if (!res.headersSent) {
+      return res.status(500).json({ error: message })
+    }
+    throw err
   }
 }
