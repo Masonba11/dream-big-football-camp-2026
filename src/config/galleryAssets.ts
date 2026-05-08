@@ -570,8 +570,6 @@ export const campGallery: GalleryItem[] = [
   }
 ]
 
-export const aboutCampPhotoSrc = campGallery[0]?.src ?? ''
-
 export function galleryStripSrcs(count: number): string[] {
   const n = campGallery.length
   if (n === 0) return []

@@ -9,6 +9,7 @@ import { SectionShell } from './ui/SectionShell'
 import { Button } from './ui/Button'
 import { SelectField, TextAreaField, TextField } from './ui/Field'
 
+/** Ensure this Stripe Payment Link charges $35 (see `pricing.online` in src/config/site.ts). */
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/cNi3cv3ir7T18wybtl4c800'
 
 /** Serverless Checkout Session — optional. Unset = families go straight to the Stripe Payment Link (no /api, works on any static host). */
@@ -254,8 +255,7 @@ export function RegistrationSection() {
               securely first; a copy of registration and waiver details is also saved in this browser before you pay.
             </p>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <PriceCard title="Early bird" price={pricing.earlyBird} note="Limited window — best value." />
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               <PriceCard title="Online" price={pricing.online} note={`Through ${closes.split(',')[0] ?? 'July 13'}.`} highlight />
               <PriceCard title="Day-of" price={pricing.dayOf} note="Shirt not guaranteed." />
             </div>

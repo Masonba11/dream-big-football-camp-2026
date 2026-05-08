@@ -24,12 +24,7 @@ export function CampDetailsPage() {
 
       <section className="rounded-2xl border border-white/10 bg-neutral-900/50 p-6 sm:p-8">
         <h2 className="font-display text-2xl tracking-wide text-white">Pricing (reference)</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-3">
-          <li className="rounded-xl border border-white/10 bg-neutral-950/60 p-4">
-            <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Early bird</p>
-            <p className="mt-1 font-display text-3xl text-white">${pricing.earlyBird}</p>
-            <p className="mt-1 text-xs text-neutral-400">Limited window</p>
-          </li>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           <li className="rounded-xl border border-red-500/40 bg-red-950/20 p-4">
             <p className="text-xs font-bold uppercase tracking-widest text-red-300/90">Online</p>
             <p className="mt-1 font-display text-3xl text-white">${pricing.online}</p>

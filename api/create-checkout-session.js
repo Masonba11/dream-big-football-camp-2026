@@ -174,7 +174,7 @@ export default async function handler(req, res) {
           quantity: 1,
           price_data: {
             currency: 'usd',
-            unit_amount: 4000,
+            unit_amount: 3500,
             product_data: {
               name: 'Dream Big Football Camp 2026',
             },

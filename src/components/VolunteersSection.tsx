@@ -1,4 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { isVolunteerSignupOpen } from '../config/site'
 import { getVolunteerWeb3AccessKey } from '../config/web3formsAccess'
 import { submitWeb3Form } from '../lib/web3forms'
 import { Container } from './ui/Container'
@@ -33,6 +35,7 @@ export function VolunteersSection({ embedded = false }: { embedded?: boolean }) 
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!isVolunteerSignupOpen()) return
     const form = e.currentTarget
     const data = new FormData(form)
     const next = validate(data)
@@ -89,11 +92,20 @@ export function VolunteersSection({ embedded = false }: { embedded?: boolean }) 
                   We rely on great volunteers to make this camp successful. Clear roles, early arrival, and organized
                   communication keep the day smooth for athletes and families.
                 </p>
+                <p className="mt-4 rounded-2xl border border-white/10 bg-neutral-950/50 p-4 text-sm text-neutral-300">
+                  <span className="font-semibold text-white">High school service hours:</span> volunteer signup is
+                  especially geared toward high school students who need community service hours for graduation. We will
+                  confirm hour documentation after assignments are set.
+                </p>
               </>
             ) : (
-              <p className="text-neutral-300">
-                We rely on great volunteers to make this camp successful. Use the form to share your availability.
-              </p>
+              <div className="space-y-4 text-neutral-300">
+                <p>We rely on great volunteers to make this camp successful. Use the form to share your availability.</p>
+                <p className="rounded-2xl border border-white/10 bg-neutral-950/50 p-4 text-sm">
+                  <span className="font-semibold text-white">High school service hours:</span> signup is especially for
+                  high schoolers who need hours for graduation; we can confirm documentation after roles are assigned.
+                </p>
+              </div>
             )}
 
             <div className={`space-y-6 ${embedded ? 'mt-6' : 'mt-8'}`}>
@@ -125,12 +137,27 @@ export function VolunteersSection({ embedded = false }: { embedded?: boolean }) 
 
           <div className="rounded-3xl border border-white/10 bg-neutral-900/60 p-6 shadow-[var(--shadow-glow)] backdrop-blur-md sm:p-8">
             <h3 className="font-display text-3xl tracking-wide text-white">Volunteer signup</h3>
-            <p className="mt-2 text-sm text-neutral-400">
-              Share your availability. Submissions are delivered securely via Web3Forms (configure keys in{' '}
-              <code className="rounded bg-white/10 px-1 py-0.5 text-[11px] text-white">.env.local</code>).
-            </p>
+            {!isVolunteerSignupOpen() ? (
+              <p className="mt-2 text-sm text-amber-100/90">
+                Volunteer spots are full for now — thank you to everyone who signed up. For questions,{' '}
+                <Link to="/contact" className="font-semibold text-white underline-offset-2 hover:underline">
+                  contact the camp
+                </Link>
+                .
+              </p>
+            ) : null}
 
-            {status === 'success' ? (
+            {!isVolunteerSignupOpen() ? (
+              <div
+                className="mt-6 rounded-2xl border border-white/10 bg-neutral-950/50 p-5 text-sm text-neutral-300"
+                role="status"
+              >
+                <p>
+                  Online volunteer signup is closed. If you still need to reach the team (for example, a scheduled
+                  service-hour confirmation), use the contact page.
+                </p>
+              </div>
+            ) : status === 'success' ? (
               <div
                 className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-5 text-sm text-emerald-100"
                 role="status"

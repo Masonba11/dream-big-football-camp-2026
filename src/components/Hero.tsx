@@ -7,9 +7,8 @@ import { Container } from './ui/Container'
 import { Countdown } from './Countdown'
 
 const highlights = [
-  { title: `${pricing.online} online`, sub: 'Standard registration' },
+  { title: `${pricing.online} online`, sub: 'Register before July 13' },
   { title: `${pricing.dayOf} day-of`, sub: 'Shirt not guaranteed' },
-  { title: `${pricing.earlyBird} early bird`, sub: 'Limited window — save when you register early' },
   { title: 'T-shirt & pizza', sub: 'Included with timely registration' },
   { title: 'Awards & raffle', sub: 'Prizes are items only — no cash' },
   { title: 'Bouncy houses', sub: 'Fun between drills' },

@@ -30,8 +30,6 @@ export type GalleryItem = {
 
 const body = `export const campGallery: GalleryItem[] = ${JSON.stringify(lines, null, 2)}
 
-export const aboutCampPhotoSrc = campGallery[0]?.src ?? ''
-
 export function galleryStripSrcs(count: number): string[] {
   const n = campGallery.length
   if (n === 0) return []
