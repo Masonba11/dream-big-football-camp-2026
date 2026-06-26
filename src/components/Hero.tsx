@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { RegisterNavLink } from './RegisterNavLink'
-import { media, pricing } from '../config/site'
+import { isRegistrationOpen, media, pricing } from '../config/site'
 import { useAutoplayUnmutedVideo } from '../hooks/useAutoplayUnmutedVideo'
 import { Container } from './ui/Container'
 import { Countdown } from './Countdown'
@@ -21,6 +21,7 @@ const heroBtnBase =
 export function Hero() {
   const heroVideoRef = useRef<HTMLVideoElement>(null)
   useAutoplayUnmutedVideo(heroVideoRef)
+  const registrationOpen = isRegistrationOpen()
 
   return (
     <section
@@ -71,7 +72,7 @@ export function Hero() {
             <RegisterNavLink
               className={`${heroBtnBase} border border-red-700/40 bg-[var(--color-brand-red)] text-white shadow-lg shadow-red-900/25 hover:bg-[var(--color-brand-red-dark)]`}
             >
-              Register now
+              {registrationOpen ? 'Register now' : 'Fully booked'}
             </RegisterNavLink>
             <Link
               to="/volunteers"
@@ -88,7 +89,9 @@ export function Hero() {
           </div>
 
           <p className="mt-4 text-sm font-semibold text-amber-200/95">
-            Online registration closes July 13 — secure your spot early.
+            {registrationOpen
+              ? 'Online registration closes July 13 — secure your spot early.'
+              : 'Registration is fully booked for Dream Big Football Camp 2026.'}
           </p>
 
           <Countdown />

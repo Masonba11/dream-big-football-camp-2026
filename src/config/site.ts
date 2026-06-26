@@ -13,17 +13,20 @@ export const pricing = {
 } as const
 
 /**
- * Volunteer form visibility. Set to `false` and redeploy when the volunteer roster is full.
- * Optional override: `VITE_VOLUNTEER_SIGNUP_OPEN=true` or `false` on the host (e.g. Vercel) without editing code.
+ * Registration form visibility. Set to `false` and redeploy when the camp is fully booked.
  */
-export const volunteerSignupOpen = true
+export const registrationOpen = true
+
+export function isRegistrationOpen(): boolean {
+  return registrationOpen
+}
+
+/**
+ * Volunteer form visibility. Set to `false` and redeploy when the volunteer roster is full.
+ */
+export const volunteerSignupOpen = false
 
 export function isVolunteerSignupOpen(): boolean {
-  const raw = import.meta.env.VITE_VOLUNTEER_SIGNUP_OPEN
-  if (typeof raw !== 'string' || raw.trim() === '') return volunteerSignupOpen
-  const v = raw.trim().toLowerCase()
-  if (['0', 'false', 'no', 'off'].includes(v)) return false
-  if (['1', 'true', 'yes', 'on'].includes(v)) return true
   return volunteerSignupOpen
 }
 

@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { pricing, registrationCloses } from '../config/site'
+import { isRegistrationOpen, pricing, registrationCloses } from '../config/site'
 import { getRegistrationWeb3AccessKey } from '../config/web3formsAccess'
 import { WAIVER_VERSION } from '../config/waiver'
 import { submitWeb3Form } from '../lib/web3forms'
@@ -119,6 +119,7 @@ export function RegistrationSection() {
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const registrationOpen = isRegistrationOpen()
   const canSubmit = useMemo(() => isFormComplete(fields), [fields])
 
   function setField<K extends keyof CampRegistrationForm>(key: K, value: CampRegistrationForm[K]) {
@@ -134,6 +135,7 @@ export function RegistrationSection() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!registrationOpen) return
     const next = validateFields(fields)
     setErrors(next)
     if (Object.keys(next).length) return
@@ -246,42 +248,84 @@ export function RegistrationSection() {
       <Container>
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">Secure your spot</p>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-red-400/90">
+              {registrationOpen ? 'Secure your spot' : 'Fully booked'}
+            </p>
             <h2 className="mt-3 font-display text-4xl tracking-wide text-white sm:text-5xl">
-              Register for Dream Big Football Camp 2026
+              {registrationOpen ? 'Register for Dream Big Football Camp 2026' : 'Dream Big Football Camp 2026 is fully booked'}
             </h2>
             <p className="mt-4 text-neutral-400">
-              Fill out the form below, agree to the liability waiver, then continue to Stripe. Your answers are sent
-              securely first; a copy of registration and waiver details is also saved in this browser before you pay.
+              {registrationOpen
+                ? 'Fill out the form below, agree to the liability waiver, then continue to Stripe. Your answers are sent securely first; a copy of registration and waiver details is also saved in this browser before you pay.'
+                : 'Registration is fully booked for Dream Big Football Camp 2026. Thank you to every family who signed up.'}
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <PriceCard title="Online" price={pricing.online} note={`Through ${closes.split(',')[0] ?? 'July 13'}.`} highlight />
-              <PriceCard title="Day-of" price={pricing.dayOf} note="Shirt not guaranteed." />
+              <PriceCard
+                title="Online"
+                price={pricing.online}
+                note={registrationOpen ? `Through ${closes.split(',')[0] ?? 'July 13'}.` : 'Closed - fully booked.'}
+                highlight
+              />
+              <PriceCard
+                title="Day-of"
+                price={pricing.dayOf}
+                note={registrationOpen ? 'Shirt not guaranteed.' : 'Closed - fully booked.'}
+              />
             </div>
 
-            <ul className="mt-8 space-y-2 text-sm text-neutral-300">
-              <li>• Online registration closes July 13.</li>
-              <li>• Registration is not complete until payment is received.</li>
-              <li>• A parent or legal guardian must agree to the waiver for campers under 18.</li>
-            </ul>
+            {registrationOpen ? (
+              <ul className="mt-8 space-y-2 text-sm text-neutral-300">
+                <li>• Online registration closes July 13.</li>
+                <li>• Registration is not complete until payment is received.</li>
+                <li>• A parent or legal guardian must agree to the waiver for campers under 18.</li>
+              </ul>
+            ) : null}
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-5 text-xs leading-relaxed text-neutral-400">
-              <p className="font-semibold text-neutral-200">How it works</p>
-              <p className="mt-2">
-                Complete every required field and the waiver, then click <strong>Continue to Payment</strong>. You
-                will be sent to a secure Stripe page to pay by card.
-              </p>
-              <p className="mt-3">
-                <Link to="/liability-waiver" className="font-semibold text-red-300 underline-offset-2 hover:underline">
-                  Read the full Liability Waiver
-                </Link>{' '}
-                before you check the agreement box.
-              </p>
+              {registrationOpen ? (
+                <>
+                  <p className="font-semibold text-neutral-200">How it works</p>
+                  <p className="mt-2">
+                    Complete every required field and the waiver, then click <strong>Continue to Payment</strong>. You
+                    will be sent to a secure Stripe page to pay by card.
+                  </p>
+                  <p className="mt-3">
+                    <Link to="/liability-waiver" className="font-semibold text-red-300 underline-offset-2 hover:underline">
+                      Read the full Liability Waiver
+                    </Link>{' '}
+                    before you check the agreement box.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-neutral-200">Fully booked</p>
+                  <p className="mt-2">
+                    All available camper spots have been filled. If you have questions about an existing registration,
+                    please contact the camp team.
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-neutral-900/60 p-6 shadow-[var(--shadow-glow)] backdrop-blur-md sm:p-8">
+            {!registrationOpen ? (
+              <div className="space-y-4" role="status">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-amber-300/90">Registration closed</p>
+                <h3 className="font-display text-3xl tracking-wide text-white">Camp is fully booked</h3>
+                <p className="text-sm leading-relaxed text-neutral-300">
+                  We are no longer accepting new camper registrations or payments for Dream Big Football Camp 2026.
+                  Thank you for the incredible response.
+                </p>
+                <Link
+                  to="/contact"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
+                >
+                  Contact the camp
+                </Link>
+              </div>
+            ) : (
             <form className="space-y-4" onSubmit={onSubmit} noValidate>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextField
@@ -475,6 +519,7 @@ export function RegistrationSection() {
                 your registration data in this browser.
               </p>
             </form>
+            )}
           </div>
         </div>
       </Container>

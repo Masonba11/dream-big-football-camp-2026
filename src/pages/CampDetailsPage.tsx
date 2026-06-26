@@ -1,10 +1,12 @@
 import { LocationSection } from '../components/LocationSection'
 import { PageLayout } from '../layouts/PageLayout'
-import { pricing, registrationCloses } from '../config/site'
+import { isRegistrationOpen, pricing, registrationCloses } from '../config/site'
 
 const closes = registrationCloses.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })
 
 export function CampDetailsPage() {
+  const registrationOpen = isRegistrationOpen()
+
   return (
     <PageLayout title="Camp details" eyebrow="Know before you go">
       <p className="max-w-2xl text-lg text-neutral-300">
@@ -37,7 +39,9 @@ export function CampDetailsPage() {
           </li>
         </ul>
         <p className="mt-4 text-sm text-neutral-400">
-          Online registration closes July 13. Payment secures your athlete&apos;s place.
+          {registrationOpen
+            ? "Online registration closes July 13. Payment secures your athlete's place."
+            : 'Registration is fully booked for Dream Big Football Camp 2026.'}
         </p>
       </section>
 

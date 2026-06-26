@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { RegisterNavLink } from './RegisterNavLink'
 import { Container } from './ui/Container'
+import { isRegistrationOpen } from '../config/site'
 
 const navItems = [
   { to: '/', label: 'Home' },
@@ -28,6 +29,7 @@ function navClassName(isActive: boolean) {
 export function Header() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const registrationOpen = isRegistrationOpen()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -74,13 +76,13 @@ export function Header() {
             </NavLink>
           ))}
           <RegisterNavLink className="ml-1 shrink-0 rounded-lg bg-[var(--color-brand-red)] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white shadow-md shadow-red-900/30 transition hover:bg-[var(--color-brand-red-dark)] sm:ml-2 sm:px-4 sm:text-xs">
-            Register
+            {registrationOpen ? 'Register' : 'Fully booked'}
           </RegisterNavLink>
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
           <RegisterNavLink className="rounded-lg bg-[var(--color-brand-red)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
-            Register
+            {registrationOpen ? 'Register' : 'Full'}
           </RegisterNavLink>
           <button
             type="button"
@@ -129,7 +131,7 @@ export function Header() {
             onNavigate={() => setOpen(false)}
             className="mt-1 rounded-xl bg-[var(--color-brand-red)] px-4 py-3 text-center text-sm font-bold text-white"
           >
-            Register for camp
+            {registrationOpen ? 'Register for camp' : 'Camp is fully booked'}
           </RegisterNavLink>
         </nav>
       </div>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { GalleryPhotoStrip } from './GalleryPhotoStrip'
 import { RegisterNavLink } from './RegisterNavLink'
 import { Container } from './ui/Container'
+import { isRegistrationOpen } from '../config/site'
 
 const quick = [
   ['Camp details', '/camp-details'],
@@ -18,6 +19,8 @@ const quick = [
 ] as const
 
 export function Footer() {
+  const registrationOpen = isRegistrationOpen()
+
   return (
     <footer className="border-t border-white/10 bg-black py-14">
       <Container>
@@ -30,7 +33,7 @@ export function Footer() {
             <p className="mt-3 text-sm text-neutral-400">Hosted by Braylen Russell</p>
             <p className="mt-4 text-sm font-medium italic text-neutral-300">Dream big. Compete hard. Have fun.</p>
             <RegisterNavLink className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-[var(--color-brand-red)] px-5 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-red-900/25 transition hover:bg-[var(--color-brand-red-dark)]">
-              Register for camp
+              {registrationOpen ? 'Register for camp' : 'Camp fully booked'}
             </RegisterNavLink>
           </div>
           <div>
