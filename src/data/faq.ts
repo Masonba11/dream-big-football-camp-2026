@@ -3,7 +3,7 @@ export type CampFaq = { q: string; a: string }
 export const campFaqs: CampFaq[] = [
   {
     q: 'When does online registration close?',
-    a: 'Online registration closes July 13, 2026. Day-of registration may be available if spots remain.',
+    a: 'Registration is fully booked for Dream Big Football Camp 2026, so online and day-of registration are closed.',
   },
   {
     q: 'Is registration complete after I pay?',

@@ -15,7 +15,7 @@ export const pricing = {
 /**
  * Registration form visibility. Set to `false` and redeploy when the camp is fully booked.
  */
-export const registrationOpen = true
+export const registrationOpen = false
 
 export function isRegistrationOpen(): boolean {
   return registrationOpen
